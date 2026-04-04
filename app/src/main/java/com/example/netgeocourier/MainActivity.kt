@@ -5,12 +5,15 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.ui.Modifier
+
 import com.example.netgeocourier.helper.LocationHelper
 import com.example.netgeocourier.helper.PermissionHelper
 import com.example.netgeocourier.screen.NetTestScreen
 import com.example.netgeocourier.ui.theme.NetGeoCourierTheme
 import com.google.android.gms.location.LocationServices
+
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
 
 class MainActivity : ComponentActivity() {
 
