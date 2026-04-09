@@ -14,13 +14,20 @@ import com.google.android.gms.location.LocationServices
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.get
+import com.example.netgeocourier.viewmodel.NetTestViewModel
 
 class MainActivity : ComponentActivity() {
+
+    lateinit var viewmodel:NetTestViewModel;  //定义viewmodel
 
     private lateinit var locationHelper: LocationHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        viewmodel = ViewModelProvider(this).get(NetTestViewModel::class.java)
 
         val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         locationHelper = LocationHelper(fusedLocationClient)
