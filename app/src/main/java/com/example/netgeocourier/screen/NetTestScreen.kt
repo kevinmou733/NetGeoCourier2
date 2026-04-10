@@ -2,8 +2,10 @@
 
 import android.graphics.Paint
 import android.widget.Toast
-feature/evaluation
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,33 +13,33 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.weight
-
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.*
- main
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-feature/evaluation
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
- main
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -47,16 +49,10 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
- feature/evaluation
-import androidx.compose.ui.unit.dp
-
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.netgeocourier.R
- main
 import com.example.netgeocourier.data.NetTestResult
 import com.example.netgeocourier.helper.CoordTransform
 import com.example.netgeocourier.helper.FileHelper
@@ -69,6 +65,7 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.sqrt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -127,10 +124,12 @@ fun NetTestScreen(
         isAutoTesting = true
         autoJob = coroutineScope.launch {
             while (isAutoTesting) {
-                val waitForSingleTest = CompletableDeferred<Unit>()
-                doTest { waitForSingleTest.complete(Unit) }
-                waitForSingleTest.await()
-                delay(5000)
+                val deferred = CompletableDeferred<Unit>()
+                doTest { deferred.complete(Unit) }
+                deferred.await()
+                if (isAutoTesting) {
+                    delay(5000)
+                }
             }
         }
     }
@@ -142,47 +141,12 @@ fun NetTestScreen(
         isTesting = false
     }
 
- feature/evaluation
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(20.dp)
-    ) {
-        Text(text = "NetGeoCourier", style = MaterialTheme.typography.titleLarge)
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = "Measure upload/download speed and open the evaluation page when you need a summary.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Button(
-                onClick = { doTest() },
-                enabled = !isTesting && !isAutoTesting,
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Start Test")
-            }
-
-            Button(
-                onClick = { stopAutoTest() },
-                enabled = isTesting || isAutoTesting,
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Stop")
-
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        stringResource(R.string.app_name),
+                        text = "NetGeoCourier",
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp
                     )
@@ -201,13 +165,21 @@ fun NetTestScreen(
                 .padding(16.dp)
                 .verticalScroll(scrollState)
         ) {
-            // 操作按钮卡片
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "Network Test Controls",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -218,11 +190,11 @@ fun NetTestScreen(
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text("开始测试", fontSize = 14.sp)
+                            Text("Start Test", fontSize = 14.sp)
                         }
 
                         Button(
-                            onClick = { isTesting = false; stopAutoTest() },
+                            onClick = { stopAutoTest() },
                             enabled = isTesting || isAutoTesting,
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp),
@@ -230,11 +202,11 @@ fun NetTestScreen(
                                 containerColor = MaterialTheme.colorScheme.error
                             )
                         ) {
-                            Text("停止测试", fontSize = 14.sp)
+                            Text("Stop", fontSize = 14.sp)
                         }
                     }
 
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -246,23 +218,25 @@ fun NetTestScreen(
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text("保存CSV", fontSize = 14.sp)
+                            Text("Save CSV", fontSize = 14.sp)
                         }
 
                         Button(
                             onClick = {
-                                if (!isAutoTesting) startAutoTest() else stopAutoTest()
+                                if (isAutoTesting) stopAutoTest() else startAutoTest()
                             },
                             enabled = !isTesting,
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             Text(
-                                if (isAutoTesting) "自动测试中..." else "自动测试",
+                                text = if (isAutoTesting) "Stop Auto" else "Auto Test",
                                 fontSize = 14.sp
                             )
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -274,7 +248,7 @@ fun NetTestScreen(
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text("生成地图", fontSize = 14.sp)
+                            Text("Generate Map", fontSize = 14.sp)
                         }
 
                         Button(
@@ -283,15 +257,24 @@ fun NetTestScreen(
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text("发送邮件", fontSize = 14.sp)
+                            Text("Send Email", fontSize = 14.sp)
                         }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedButton(
+                        onClick = onOpenEvaluation,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Open Network Evaluation", fontSize = 14.sp)
                     }
                 }
             }
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // 最新结果卡片
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -299,16 +282,16 @@ fun NetTestScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        "最新结果",
+                        text = "Latest Result",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
 
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                    if (curResult != null) {
-                        ResultDetailCard(curResult!!)
+                    if (currentResult != null) {
+                        ResultDetailCard(currentResult!!)
                     } else {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
@@ -318,7 +301,7 @@ fun NetTestScreen(
                             )
                         ) {
                             Text(
-                                "暂无测试数据",
+                                text = "No test result yet.",
                                 modifier = Modifier.padding(32.dp),
                                 textAlign = TextAlign.Center,
                                 fontSize = 14.sp,
@@ -329,9 +312,8 @@ fun NetTestScreen(
                 }
             }
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // 折线图卡片
             if (testResults.isNotEmpty()) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -345,19 +327,19 @@ fun NetTestScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                "速率趋势图",
+                                text = "Speed Trend",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
                             )
                             Text(
-                                "共 ${testResults.size} 次测试",
+                                text = "${testResults.size} records",
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
 
-                        Spacer(Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
 
                         Box(
                             modifier = Modifier
@@ -367,10 +349,10 @@ fun NetTestScreen(
                             SimpleSpeedChart(testResults = testResults)
                         }
 
-                        Spacer(Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
-                            "提示：点击图表上的圆点查看详细信息",
+                            text = "Tap a chart point to see details.",
                             fontSize = 10.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.fillMaxWidth(),
@@ -379,10 +361,9 @@ fun NetTestScreen(
                     }
                 }
 
-                Spacer(Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(20.dp))
             }
 
-            // 历史记录卡片
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -390,13 +371,13 @@ fun NetTestScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        "历史记录",
+                        text = "History",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
 
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     if (testResults.isEmpty()) {
                         Card(
@@ -407,7 +388,7 @@ fun NetTestScreen(
                             )
                         ) {
                             Text(
-                                "暂无历史数据，点击\"开始测试\"",
+                                text = "No history data. Start a test first.",
                                 modifier = Modifier.padding(32.dp),
                                 textAlign = TextAlign.Center,
                                 fontSize = 14.sp,
@@ -416,39 +397,14 @@ fun NetTestScreen(
                         }
                     } else {
                         testResults.reversed().forEachIndexed { index, result ->
-                            ResultDetailItem(result, index == 0)
+                            ResultDetailItem(result = result, isFirst = index == 0)
                         }
                     }
                 }
- main
             }
         }
     }
 }
-
- feature/evaluation
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            OutlinedButton(
-                onClick = { csvPath = FileHelper.saveCsv(context, testResults) },
-                enabled = testResults.isNotEmpty() && !isTesting && !isAutoTesting,
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Save CSV")
-            }
-
-            OutlinedButton(
-                onClick = {
-                    if (isAutoTesting) stopAutoTest() else startAutoTest()
-                },
-                enabled = !isTesting,
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(if (isAutoTesting) "Stop Auto" else "Auto Test")
 
 @Composable
 fun ResultDetailCard(result: NetTestResult) {
@@ -465,24 +421,26 @@ fun ResultDetailCard(result: NetTestResult) {
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Text(
-                result.timestamp,
+                text = result.timestamp,
                 fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onPrimaryContainer
             )
-            Spacer(Modifier.height(8.dp))
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                SpeedItem("下行", result.download.toFloat(), Color(0xFF4285F4))
-                SpeedItem("上行", result.upload.toFloat(), Color(0xFFEA4335))
-                SpeedItem("Ping", result.ping.toFloat(), Color(0xFF34A853), "ms")
- main
+                SpeedItem(label = "Download", value = result.download.toFloat(), color = Color(0xFF4285F4))
+                SpeedItem(label = "Upload", value = result.upload.toFloat(), color = Color(0xFFEA4335))
+                SpeedItem(label = "Ping", value = result.ping.toFloat(), color = Color(0xFF34A853), unit = "ms")
             }
 
+            Spacer(modifier = Modifier.height(8.dp))
+
             Text(
-                "坐标: ${"%.4f".format(gcjLat)}, ${"%.4f".format(gcjLon)}",
+                text = "Location: ${"%.4f".format(gcjLat)}, ${"%.4f".format(gcjLon)}",
                 fontSize = 10.sp,
                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
             )
@@ -490,25 +448,22 @@ fun ResultDetailCard(result: NetTestResult) {
     }
 }
 
- feature/evaluation
-        Spacer(modifier = Modifier.height(8.dp))
-
 @Composable
 fun SpeedItem(label: String, value: Float, color: Color, unit: String = "Mbps") {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
-            label,
+            text = label,
             fontSize = 11.sp,
             color = color
         )
         Text(
-            "${String.format("%.2f", value)}",
+            text = String.format(Locale.US, "%.2f", value),
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
             color = color
         )
         Text(
-            unit,
+            text = unit,
             fontSize = 9.sp,
             color = color.copy(alpha = 0.7f)
         )
@@ -525,94 +480,46 @@ fun ResultDetailItem(result: NetTestResult, isFirst: Boolean) {
         if (!isFirst) {
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
         }
- main
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
- feature/evaluation
-            OutlinedButton(
-                onClick = { htmlPath = FileHelper.saveAmapHtml(context, testResults) },
-                enabled = testResults.isNotEmpty() && !isTesting && !isAutoTesting,
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Generate Map")
-            }
-
-            OutlinedButton(
-                onClick = { FileHelper.sendEmail(context, csvPath, htmlPath) },
-                enabled = testResults.isNotEmpty() && !isTesting && !isAutoTesting,
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Send Email")
-            }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Button(
-            onClick = onOpenEvaluation,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Open Network Evaluation")
-
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    result.timestamp,
+                    text = result.timestamp,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium
                 )
                 Text(
-                    "📡 ${String.format("%.2f", result.download)} Mbps ↓  ${String.format("%.2f", result.upload)} Mbps ↑",
+                    text = "D ${String.format(Locale.US, "%.2f", result.download)} Mbps | U ${String.format(Locale.US, "%.2f", result.upload)} Mbps",
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    "📍 ${"%.4f".format(gcjLat)}, ${"%.4f".format(gcjLon)}",
+                    text = "L ${"%.4f".format(gcjLat)}, ${"%.4f".format(gcjLon)}",
                     fontSize = 10.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 )
             }
 
+            Spacer(modifier = Modifier.width(8.dp))
+
             Text(
-                "🏓 ${result.ping}ms",
+                text = "${result.ping} ms",
                 fontSize = 11.sp,
                 color = Color(0xFF34A853)
             )
- main
         }
     }
 }
 
- feature/evaluation
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(text = "Latest Result", style = MaterialTheme.typography.titleMedium)
-
-        if (currentResult != null) {
-            ResultDetail(currentResult!!)
-        } else {
-            Text(text = "No test result yet.", style = MaterialTheme.typography.bodySmall)
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(text = "History", style = MaterialTheme.typography.titleSmall)
-
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(scrollState)
-        ) {
-            if (testResults.isEmpty()) {
-                Text(text = "No history data.")
-            }
-            testResults.reversed().forEach {
-                ResultDetail(it)
-                HorizontalDivider()
-
 @Composable
 fun SimpleSpeedChart(testResults: List<NetTestResult>) {
-    if (testResults.isEmpty()) return
+    if (testResults.isEmpty()) {
+        return
+    }
 
     var maxSpeed = 10f
     for (result in testResults) {
@@ -621,7 +528,7 @@ fun SimpleSpeedChart(testResults: List<NetTestResult>) {
         if (download > maxSpeed) maxSpeed = download
         if (upload > maxSpeed) maxSpeed = upload
     }
-    maxSpeed = if (maxSpeed <= 10) 10f else ((maxSpeed + 9) / 10).toInt() * 10f
+    maxSpeed = if (maxSpeed <= 10f) 10f else ((maxSpeed + 9f) / 10f).toInt() * 10f
 
     var showDialog by remember { mutableStateOf(false) }
     var selectedResult by remember { mutableStateOf<NetTestResult?>(null) }
@@ -644,29 +551,28 @@ fun SimpleSpeedChart(testResults: List<NetTestResult>) {
             onDismissRequest = { showDialog = false },
             title = {
                 Text(
-                    "第 ${selectedIndex + 1} 次测试",
+                    text = "Test ${selectedIndex + 1}",
                     fontWeight = FontWeight.Bold
                 )
             },
             text = {
                 Column {
-                    Text("时间：${selectedResult!!.timestamp}", fontSize = 14.sp)
+                    Text(text = "Time: ${selectedResult!!.timestamp}", fontSize = 14.sp)
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        SpeedItem("下行", selectedResult!!.download.toFloat(), Color(0xFF4285F4))
-                        SpeedItem("上行", selectedResult!!.upload.toFloat(), Color(0xFFEA4335))
-                        SpeedItem("Ping", selectedResult!!.ping.toFloat(), Color(0xFF34A853), "ms")
+                        SpeedItem(label = "Download", value = selectedResult!!.download.toFloat(), color = Color(0xFF4285F4))
+                        SpeedItem(label = "Upload", value = selectedResult!!.upload.toFloat(), color = Color(0xFFEA4335))
+                        SpeedItem(label = "Ping", value = selectedResult!!.ping.toFloat(), color = Color(0xFF34A853), unit = "ms")
                     }
                 }
             },
             confirmButton = {
                 TextButton(onClick = { showDialog = false }) {
-                    Text("关闭")
+                    Text("Close")
                 }
- main
             }
         )
     }
@@ -678,42 +584,55 @@ fun SpeedChartCanvas(
     maxSpeed: Float,
     onPointClick: ((Int, NetTestResult) -> Unit)? = null
 ) {
+    if (testResults.size < 2) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Need at least 2 records to draw the chart.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = 12.sp
+            )
+        }
+        return
+    }
+
     val downloadPointPositions = remember { mutableStateListOf<Pair<Int, Offset>>() }
     val uploadPointPositions = remember { mutableStateListOf<Pair<Int, Offset>>() }
 
-    Canvas(modifier = Modifier
-        .fillMaxSize()
-        .pointerInput(Unit) {
-            detectTapGestures { offset ->
-                var tappedIndex = -1
+    Canvas(
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(testResults) {
+                detectTapGestures { offset ->
+                    var tappedIndex = -1
 
-                for ((index, pos) in downloadPointPositions) {
-                    val dx = offset.x - pos.x
-                    val dy = offset.y - pos.y
-                    val distance = kotlin.math.sqrt(dx * dx + dy * dy)
-                    if (distance < 30f) {
-                        tappedIndex = index
-                        break
-                    }
-                }
-
-                if (tappedIndex == -1) {
-                    for ((index, pos) in uploadPointPositions) {
+                    for ((index, pos) in downloadPointPositions) {
                         val dx = offset.x - pos.x
                         val dy = offset.y - pos.y
-                        val distance = kotlin.math.sqrt(dx * dx + dy * dy)
-                        if (distance < 30f) {
+                        if (sqrt(dx * dx + dy * dy) < 30f) {
                             tappedIndex = index
                             break
                         }
                     }
-                }
 
-                if (tappedIndex != -1 && tappedIndex < testResults.size) {
-                    onPointClick?.invoke(tappedIndex, testResults[tappedIndex])
+                    if (tappedIndex == -1) {
+                        for ((index, pos) in uploadPointPositions) {
+                            val dx = offset.x - pos.x
+                            val dy = offset.y - pos.y
+                            if (sqrt(dx * dx + dy * dy) < 30f) {
+                                tappedIndex = index
+                                break
+                            }
+                        }
+                    }
+
+                    if (tappedIndex in testResults.indices) {
+                        onPointClick?.invoke(tappedIndex, testResults[tappedIndex])
+                    }
                 }
             }
-        }
     ) {
         downloadPointPositions.clear()
         uploadPointPositions.clear()
@@ -726,22 +645,8 @@ fun SpeedChartCanvas(
         val paddingBottom = 35f
         val chartWidth = width - paddingLeft - paddingRight
         val chartHeight = height - paddingTop - paddingBottom
-
-        if (testResults.size < 2) return@Canvas
-
         val xStep = chartWidth / (testResults.size - 1)
         val ySteps = 5
-
- feature/evaluation
-    Column(modifier = Modifier.padding(vertical = 6.dp)) {
-        Text("Time: ${result.timestamp}", style = MaterialTheme.typography.bodySmall)
-        Text(
-            "Location (GCJ-02): ${"%.6f".format(gcjLat)}, ${"%.6f".format(gcjLon)}",
-            style = MaterialTheme.typography.bodySmall
-        )
-        Text("Upload: ${"%.2f".format(result.upload)} Mbps", style = MaterialTheme.typography.bodySmall)
-        Text("Download: ${"%.2f".format(result.download)} Mbps", style = MaterialTheme.typography.bodySmall)
-        Text("Ping: ${result.ping} ms", style = MaterialTheme.typography.bodySmall)
 
         for (i in 0..ySteps) {
             val y = paddingTop + chartHeight * (1 - i.toFloat() / ySteps)
@@ -788,51 +693,68 @@ fun SpeedChartCanvas(
             )
         }
 
-        val downloadPoints = Array(testResults.size) { i ->
-            val x = paddingLeft + i * xStep
-            val y = paddingTop + chartHeight * (1 - testResults[i].download.toFloat() / maxSpeed)
+        val downloadPoints = Array(testResults.size) { index ->
+            val x = paddingLeft + index * xStep
+            val y = paddingTop + chartHeight * (1 - testResults[index].download.toFloat() / maxSpeed)
             Offset(x, y)
         }
 
-        val uploadPoints = Array(testResults.size) { i ->
-            val x = paddingLeft + i * xStep
-            val y = paddingTop + chartHeight * (1 - testResults[i].upload.toFloat() / maxSpeed)
+        val uploadPoints = Array(testResults.size) { index ->
+            val x = paddingLeft + index * xStep
+            val y = paddingTop + chartHeight * (1 - testResults[index].upload.toFloat() / maxSpeed)
             Offset(x, y)
         }
 
-        for (i in downloadPoints.indices) {
-            downloadPointPositions.add(Pair(i, downloadPoints[i]))
+        downloadPoints.forEachIndexed { index, point ->
+            downloadPointPositions.add(index to point)
         }
-        for (i in uploadPoints.indices) {
-            uploadPointPositions.add(Pair(i, uploadPoints[i]))
+        uploadPoints.forEachIndexed { index, point ->
+            uploadPointPositions.add(index to point)
         }
 
-        val downloadPath = Path()
-        for (i in downloadPoints.indices) {
-            if (i == 0) downloadPath.moveTo(downloadPoints[i].x, downloadPoints[i].y)
-            else downloadPath.lineTo(downloadPoints[i].x, downloadPoints[i].y)
+        val downloadPath = Path().apply {
+            downloadPoints.forEachIndexed { index, point ->
+                if (index == 0) moveTo(point.x, point.y) else lineTo(point.x, point.y)
+            }
         }
-        drawPath(path = downloadPath, color = Color(0xFF4285F4), style = Stroke(width = 2.5f, cap = StrokeCap.Round))
+        drawPath(
+            path = downloadPath,
+            color = Color(0xFF4285F4),
+            style = Stroke(width = 2.5f, cap = StrokeCap.Round)
+        )
 
-        for (point in downloadPoints) {
+        downloadPoints.forEach { point ->
             drawCircle(color = Color(0xFF4285F4), radius = 7f, center = point)
             drawCircle(color = Color.White, radius = 3f, center = point)
         }
 
-        val uploadPath = Path()
-        for (i in uploadPoints.indices) {
-            if (i == 0) uploadPath.moveTo(uploadPoints[i].x, uploadPoints[i].y)
-            else uploadPath.lineTo(uploadPoints[i].x, uploadPoints[i].y)
+        val uploadPath = Path().apply {
+            uploadPoints.forEachIndexed { index, point ->
+                if (index == 0) moveTo(point.x, point.y) else lineTo(point.x, point.y)
+            }
         }
-        drawPath(path = uploadPath, color = Color(0xFFEA4335), style = Stroke(width = 2.5f, cap = StrokeCap.Round))
+        drawPath(
+            path = uploadPath,
+            color = Color(0xFFEA4335),
+            style = Stroke(width = 2.5f, cap = StrokeCap.Round)
+        )
 
-        for (point in uploadPoints) {
+        uploadPoints.forEach { point ->
             drawCircle(color = Color(0xFFEA4335), radius = 7f, center = point)
             drawCircle(color = Color.White, radius = 3f, center = point)
         }
 
-        drawLine(color = Color.Black, start = Offset(paddingLeft, paddingTop), end = Offset(paddingLeft, height - paddingBottom), strokeWidth = 1.5f)
-        drawLine(color = Color.Black, start = Offset(paddingLeft, height - paddingBottom), end = Offset(width - paddingRight, height - paddingBottom), strokeWidth = 1.5f)
- main
+        drawLine(
+            color = Color.Black,
+            start = Offset(paddingLeft, paddingTop),
+            end = Offset(paddingLeft, height - paddingBottom),
+            strokeWidth = 1.5f
+        )
+        drawLine(
+            color = Color.Black,
+            start = Offset(paddingLeft, height - paddingBottom),
+            end = Offset(width - paddingRight, height - paddingBottom),
+            strokeWidth = 1.5f
+        )
     }
 }

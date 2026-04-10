@@ -11,36 +11,30 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.ViewModelProvider
 import com.example.netgeocourier.helper.LocationHelper
 import com.example.netgeocourier.helper.PermissionHelper
 import com.example.netgeocourier.screen.EvaluationScreen
 import com.example.netgeocourier.screen.NetTestScreen
 import com.example.netgeocourier.ui.theme.NetGeoCourierTheme
+import com.example.netgeocourier.viewmodel.NetTestViewModel
 import com.google.android.gms.location.LocationServices
 
- feature/evaluation
 private enum class AppPage {
     TEST,
     EVALUATION
 }
 
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.ui.Modifier
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.get
-import com.example.netgeocourier.viewmodel.NetTestViewModel
- main
-
 class MainActivity : ComponentActivity() {
 
-    lateinit var viewmodel:NetTestViewModel;  //定义viewmodel
+    lateinit var viewmodel: NetTestViewModel
 
     private lateinit var locationHelper: LocationHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        viewmodel = ViewModelProvider(this).get(NetTestViewModel::class.java)
+        viewmodel = ViewModelProvider(this)[NetTestViewModel::class.java]
 
         val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         locationHelper = LocationHelper(fusedLocationClient)
