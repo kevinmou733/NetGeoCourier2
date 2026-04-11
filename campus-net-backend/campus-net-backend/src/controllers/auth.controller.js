@@ -3,12 +3,12 @@ const { ok } = require("../utils/responses");
 
 async function register(req, res) {
   const result = await authService.register(req.body);
-  ok(res, result, "ok", 201);
+  ok(res, result, "注册成功。", 201);
 }
 
 async function login(req, res) {
   const result = await authService.login(req.body);
-  ok(res, result);
+  ok(res, result, "登录成功。");
 }
 
 async function me(req, res) {

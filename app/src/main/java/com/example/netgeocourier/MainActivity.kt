@@ -8,9 +8,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import com.example.netgeocourier.helper.AuthTokenStore
 import androidx.lifecycle.ViewModelProvider
 import com.example.netgeocourier.helper.LocationHelper
 import com.example.netgeocourier.helper.PermissionHelper
+import com.example.netgeocourier.screen.AuthScreen
 import com.example.netgeocourier.screen.EvaluationScreen
 import com.example.netgeocourier.screen.NetTestScreen
 import com.example.netgeocourier.ui.theme.NetGeoCourierTheme
@@ -34,12 +36,26 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     when (viewmodel.currentPage) {
+                        AppPage.AUTH -> AuthScreen(
+                            onBack = { viewmodel.currentPage = AppPage.TEST },
+                            onAuthSuccess = { viewmodel.currentPage = AppPage.TEST }
+                        )
                         AppPage.TEST -> NetTestScreen(
                             viewModel = viewmodel,
-                            onOpenEvaluation = { viewmodel.currentPage = AppPage.EVALUATION }
+                            onOpenEvaluation = { viewmodel.currentPage = AppPage.EVALUATION },
+                            onOpenAuth = { viewmodel.currentPage = AppPage.AUTH },
+                            onLogout = {
+                                AuthTokenStore.clearAccessToken(this)
+                                viewmodel.currentPage = AppPage.TEST
+                            }
                         )
                         AppPage.EVALUATION -> EvaluationScreen(
-                            onBack = { viewmodel.currentPage = AppPage.TEST }
+                            onBack = { viewmodel.currentPage = AppPage.TEST },
+                            onOpenAuth = { viewmodel.currentPage = AppPage.AUTH },
+                            onLogout = {
+                                AuthTokenStore.clearAccessToken(this)
+                                viewmodel.currentPage = AppPage.TEST
+                            }
                         )
                     }
                 }

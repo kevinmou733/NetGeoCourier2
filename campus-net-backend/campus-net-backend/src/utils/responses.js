@@ -9,6 +9,7 @@ function ok(res, data, message = "ok", statusCode = 200) {
 function errorResponse(res, statusCode, code, message, requestId) {
   res.status(statusCode).json({
     success: false,
+    message,
     error: {
       code,
       message,

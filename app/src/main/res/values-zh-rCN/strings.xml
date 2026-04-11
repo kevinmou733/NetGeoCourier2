@@ -1,13 +1,11 @@
-<resources>
-    <!-- App 名称 -->
+﻿<resources>
     <string name="app_name">NetGeoCourier</string>
 
-    <!-- 通用按钮 -->
-    <string name="start_test">开始测试</string>
+    <string name="start_test">开始测速</string>
     <string name="stop">停止</string>
-    <string name="auto_test">自动测试</string>
-    <string name="stop_auto">停止自动</string>
-    <string name="save_csv">保存 CSV</string>
+    <string name="auto_test">自动测速</string>
+    <string name="stop_auto">停止自动测速</string>
+    <string name="save_csv">导出 CSV</string>
     <string name="generate_map">生成地图</string>
     <string name="send_email">发送邮件</string>
     <string name="open_network_evaluation">打开网络评估</string>
@@ -15,62 +13,94 @@
     <string name="refresh">刷新</string>
     <string name="close">关闭</string>
 
-    <!-- 测试结果 -->
     <string name="latest_result">最新结果</string>
-    <string name="no_test_result_yet">暂无测试结果</string>
+    <string name="no_test_result_yet">暂无测速结果</string>
     <string name="speed_trend">速度趋势</string>
-    <string name="tap_chart_point_details">点击图表点查看详情</string>
-    <string name="no_history_data">暂无历史数据，请先开始测试</string>
-    <string name="need_two_records">至少需要2条记录才能绘制图表</string>
+    <string name="tap_chart_point_details">点击图表节点查看详情</string>
+    <string name="no_history_data">暂无历史数据，请先完成一次测速</string>
+    <string name="need_two_records">至少需要 2 条记录才能绘制图表</string>
     <string name="records">条记录</string>
 
-    <!-- 网络测速标签 -->
     <string name="download">下载</string>
     <string name="upload">上传</string>
     <string name="ping">延迟</string>
     <string name="unit_mbps">Mbps</string>
     <string name="unit_ms">毫秒</string>
 
-    <!-- 位置 -->
     <string name="location">位置</string>
     <string name="location_format">%.4f, %.4f</string>
 
-    <!-- 错误提示 -->
-    <string name="failed_get_location">获取位置失败，请检查权限</string>
+    <string name="failed_get_location">获取定位失败，请检查权限。</string>
     <string name="permissions_granted">权限已授予</string>
-    <string name="location_permission_required">网络测试需要位置权限</string>
-    <string name="location_permission_denied">位置权限被拒绝，请在设置中启用</string>
+    <string name="location_permission_required">网络测速需要定位权限</string>
+    <string name="location_permission_denied">定位权限被拒绝，请前往设置开启。</string>
 
-    <!-- 网络评估页面 -->
     <string name="network_evaluation">网络评估</string>
-    <string name="evaluation_api_description">使用保存的 Bearer 令牌调用 GET /api/v1/evaluation</string>
+    <string name="evaluation_api_description">查看基于已同步测速记录生成的个人网络评估。</string>
     <string name="overall_score">综合评分</string>
     <string name="level">等级</string>
-    <string name="record_count">记录数: %d</string>
+    <string name="level_excellent">优秀</string>
+    <string name="level_good">良好</string>
+    <string name="level_fair">一般</string>
+    <string name="level_poor">较差</string>
+    <string name="level_no_data">暂无数据</string>
+    <string name="record_count">记录数：%d</string>
     <string name="metrics">指标</string>
     <string name="average_download">平均下载速度</string>
     <string name="average_ping">平均延迟</string>
-    <string name="average_rssi">平均信号强度</string>
-    <string name="average_snr">平均信噪比</string>
+    <string name="average_rssi">平均 RSSI</string>
+    <string name="average_snr">平均 SNR</string>
     <string name="suggestions">建议</string>
     <string name="no_suggestions">暂无建议</string>
-    <string name="token_required">需要令牌</string>
+    <string name="token_required">需要登录</string>
     <string name="request_failed">请求失败</string>
-    <string name="token_save_instruction">保存登录响应字段 data.accessToken，使用 AuthTokenStore.saveAccessToken(context, accessToken)。</string>
+    <string name="token_save_instruction">请保存登录响应中的 data.accessToken。</string>
 
-    <!-- 单位 -->
     <string name="unit_mbps_short">Mbps</string>
     <string name="unit_ms_short">毫秒</string>
     <string name="unit_dbm">dBm</string>
     <string name="unit_db">dB</string>
 
-    <!-- 新增：界面标题 -->
-    <string name="network_test_controls">网络测试控制面板</string>
+    <string name="network_test_controls">网络测速控制</string>
     <string name="history">历史记录</string>
     <string name="test_dialog_title">测试 %d</string>
-    <string name="time_label">时间: %s</string>
-    <string name="speed_label">%s: %.2f %s</string>
-
-    <!-- 空值占位符 -->
+    <string name="time_label">时间</string>
+    <string name="speed_label">%1$s：%2$.2f %3$s</string>
     <string name="na">--</string>
+
+    <string name="auth_title">账号中心</string>
+    <string name="auth_subtitle">现在支持直接在应用内注册、登录并自动保存令牌。</string>
+    <string name="auth_tab_login">登录</string>
+    <string name="auth_tab_register">注册</string>
+    <string name="auth_username">用户名</string>
+    <string name="auth_username_hint">支持字母、数字、下划线、点、@ 和连字符。</string>
+    <string name="auth_password">密码</string>
+    <string name="auth_password_hint">至少 6 位。</string>
+    <string name="auth_show_password">显示密码</string>
+    <string name="auth_hide_password">隐藏密码</string>
+    <string name="auth_display_name">显示名称（可选）</string>
+    <string name="auth_student_id">学号（可选）</string>
+    <string name="auth_submit_login">立即登录</string>
+    <string name="auth_submit_register">注册并登录</string>
+    <string name="auth_back">返回</string>
+    <string name="auth_validation_username">用户名至少需要 3 个字符。</string>
+    <string name="auth_validation_password">密码至少需要 6 个字符。</string>
+    <string name="auth_failed">认证失败，请稍后重试。</string>
+    <string name="auth_server_title">后端地址</string>
+    <string name="auth_server_label">服务器地址</string>
+    <string name="auth_server_hint">模拟器使用 http://10.0.2.2:3000/；真机请填写电脑局域网地址，例如 http://192.168.1.10:3000/</string>
+
+    <string name="session_title">账号状态</string>
+    <string name="session_signed_in_title">当前账号</string>
+    <string name="session_signed_in_desc">已登录，测速完成后会自动同步记录。</string>
+    <string name="session_signed_out_desc">现在可以直接注册和登录。登录后会自动保存令牌，并把测速结果同步到后端。</string>
+    <string name="session_login_register">登录 / 注册</string>
+    <string name="session_sign_out">退出登录</string>
+
+    <string name="evaluation_session_title">登录状态</string>
+    <string name="evaluation_signed_in_title">当前评估账号</string>
+    <string name="evaluation_signed_out_desc">当前未登录。登录后系统会自动同步测速记录，并基于你的个人记录生成评估结果。</string>
+    <string name="evaluation_open_auth">去登录 / 注册</string>
+    <string name="evaluation_missing_auth">请先登录或注册后再查看个人评估。</string>
+    <string name="unknown_error">未知错误。</string>
 </resources>

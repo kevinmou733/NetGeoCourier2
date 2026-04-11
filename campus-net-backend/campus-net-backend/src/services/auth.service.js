@@ -34,12 +34,12 @@ const authService = {
     const input = validateLogin(body);
     const user = await userRepository.findByUsername(input.username);
     if (!user) {
-      throw createHttpError(401, "AUTH_INVALID_CREDENTIALS", "Invalid username or password.");
+      throw createHttpError(401, "AUTH_INVALID_CREDENTIALS", "用户名或密码错误。");
     }
 
     const isValidPassword = await verifyPassword(input.password, user.passwordHash);
     if (!isValidPassword) {
-      throw createHttpError(401, "AUTH_INVALID_CREDENTIALS", "Invalid username or password.");
+      throw createHttpError(401, "AUTH_INVALID_CREDENTIALS", "用户名或密码错误。");
     }
 
     return buildAuthResponse(user);

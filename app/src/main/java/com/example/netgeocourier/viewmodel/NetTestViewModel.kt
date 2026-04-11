@@ -6,9 +6,12 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.netgeocourier.R
 import com.example.netgeocourier.data.NetTestResult
+import com.example.netgeocourier.helper.AuthTokenStore
 import com.example.netgeocourier.helper.LocationHelper
 import com.example.netgeocourier.helper.SpeedTestHelper
 import com.example.netgeocourier.helper.FileHelper
+import com.example.netgeocourier.network.ApiClient
+import com.example.netgeocourier.network.RecordRepository
 
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -31,7 +34,7 @@ private const val TAG = "NetTestViewModel"
 
 // 页面枚举
 enum class AppPage {
-    TEST, EVALUATION
+    AUTH, TEST, EVALUATION
 }
 
 class NetTestViewModel(application: Application) : AndroidViewModel(application) {
@@ -61,6 +64,9 @@ class NetTestViewModel(application: Application) : AndroidViewModel(application)
     val htmlPath: StateFlow<String?> = _htmlPath.asStateFlow()
 
     private val coroutineScope = CoroutineScope(Dispatchers.Main + viewModelScope.coroutineContext)
+    private val recordRepository = RecordRepository(
+        ApiClient.recordService(application.applicationContext)
+    )
 
     fun doTest(onFinish: (() -> Unit)? = null, onError: (String) -> Unit = {}) {
         if (_isTesting.value || _isAutoTesting.value) return
@@ -116,6 +122,7 @@ class NetTestViewModel(application: Application) : AndroidViewModel(application)
             _curResult.value = result
             _testResults.value = _testResults.value + result
             _isTesting.value = false
+            syncRecordIfNeeded(result)
             onFinish?.invoke()
         }
     }
@@ -152,6 +159,20 @@ class NetTestViewModel(application: Application) : AndroidViewModel(application)
 
     fun sendEmail(context: android.content.Context) {
         FileHelper.sendEmail(context, _csvPath.value, _htmlPath.value)
+    }
+
+    private fun syncRecordIfNeeded(result: NetTestResult) {
+        val context = getApplication<Application>()
+        if (AuthTokenStore.getAccessToken(context).isNullOrBlank()) {
+            return
+        }
+
+        coroutineScope.launch {
+            recordRepository.uploadResult(result)
+                .onFailure { throwable ->
+                    Log.w(TAG, "Failed to sync record: ${throwable.message}", throwable)
+                }
+        }
     }
 
     override fun onCleared() {
