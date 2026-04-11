@@ -1,9 +1,10 @@
-﻿package com.example.netgeocourier.helper
+package com.example.netgeocourier.helper
 
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Environment
+import android.util.Log
 import android.widget.Toast
 import androidx.core.content.FileProvider
 import com.example.netgeocourier.BuildConfig
@@ -56,7 +57,7 @@ object FileHelper {
 
         val first = list.firstOrNull()
         val (centerLat, centerLon) = first?.let {
-            it.latitude to it.longitude  // 已经是 GCJ-02
+            it.latitude to it.longitude
         } ?: (39.90923 to 116.397428)
 
         val markers = list.joinToString("\n") { item ->
@@ -65,36 +66,61 @@ object FileHelper {
             |new AMap.Marker({
             |  position: [$lon, $lat],
             |  map: map,
-            |  title: "${item.timestamp} upload ${"%.2f".format(item.upload)} download ${"%.2f".format(item.download)}"
+            |  title: "${item.timestamp}"
             |});
             """.trimMargin()
         }
 
         val html = """
-            |<!DOCTYPE html>
-            |<html>
-            |<head>
-            |  <meta charset="utf-8">
-            |  <title>Network Test Map</title>
-            |  <style>html,body,#container{width:100%;height:100%;margin:0;padding:0;}</style>
-            |  <script src="https://webapi.amap.com/maps?v=2.0&key=$key"></script>
-            |</head>
-            |<body>
-            |  <div id="container"></div>
-            |  <script>
-            |    var map = new AMap.Map('container', {
-            |      resizeEnable: true,
-            |      zoom: 13,
-            |      center: [$centerLon, $centerLat]
-            |    });
-            |    $markers
-            |  </script>
-            |</body>
-            |</html>
-        """.trimMargin()
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="utf-8">
+              <title>Network Test Map</title>
+              <style>html,body,#container{width:100%;height:100%;margin:0;padding:0;}</style>
+              <script src="https://webapi.amap.com/maps?v=2.0&key=$key"></script>
+            </head>
+            <body>
+              <div id="container"></div>
+              <script>
+                var map = new AMap.Map('container', {
+                  resizeEnable: true,
+                  zoom: 13,
+                  center: [$centerLon, $centerLat]
+                });
+                $markers
+                // 启用定位蓝点
+                map.setMyLocationEnabled(true);
+                var myLocationStyle = new AMap.MyLocationStyle();
+                myLocationStyle.myLocationType(AMap.MyLocationType.LOCATION_TYPE_LOCATION_ROTATE);
+                myLocationStyle.interval(2000);
+                map.setMyLocationStyle(myLocationStyle);
+              </script>
+            </body>
+            </html>
+        """.trimIndent()
 
         file.writeText(html)
-        Toast.makeText(context, "Map HTML generated: ${file.name}", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "Map generated: ${file.name}", Toast.LENGTH_SHORT).show()
+
+        // 自动用浏览器打开
+        try {
+            val uri = androidx.core.content.FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                file
+            )
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "text/html")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(Intent.createChooser(intent, "Open map with"))
+        } catch (e: Exception) {
+            Log.e("FileHelper", "Failed to open HTML: ${e.message}", e)
+            Toast.makeText(context, "HTML saved. Use Send Email to view on PC", Toast.LENGTH_LONG).show()
+        }
+
         return file.absolutePath
     }
 

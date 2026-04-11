@@ -1,5 +1,9 @@
 package com.example.netgeocourier.data
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+
+@Parcelize
 data class NetTestResult(
     val timestamp: String,
     val latitude: Double,
@@ -7,4 +11,4 @@ data class NetTestResult(
     val upload: Double,
     val download: Double,
     val ping: Int
-)
+) : Parcelable

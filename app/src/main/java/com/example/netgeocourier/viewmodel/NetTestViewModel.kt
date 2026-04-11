@@ -63,75 +63,128 @@ class NetTestViewModel(application: Application) : AndroidViewModel(application)
     private val coroutineScope = CoroutineScope(Dispatchers.Main + viewModelScope.coroutineContext)
 
     fun doTest(onFinish: (() -> Unit)? = null, onError: (String) -> Unit = {}) {
-        if (_isTesting.value || _isAutoTesting.value) return
+        if (_isTesting.value) return
 
         _isTesting.value = true
         _curResult.value = null
 
         coroutineScope.launch {
-            val context = getApplication<Application>()
-            val location = try {
-                locationHelper.getCurrentLocation()
-            } catch (e: Exception) {
-                Log.e("NetTestViewModel", "Location exception: ${e.message}", e)
-                null
-            }
-            
-            if (location == null) {
-                _isTesting.value = false
-                // 获取详细错误信息
-                val (errorCode, errorInfo) = locationHelper.getLastError()
-                val errorMessage = when (errorCode) {
-                    0 -> "Unknown location error"
-                    -1 -> "Location permission denied. Please grant location permission."
-                    -2 -> "Location client initialization failed: $errorInfo"
-                    -3 -> "Location callback returned null"
-                    12 -> "Missing required location permission. Check AndroidManifest.xml."
-                    4 -> "Network error. Check internet connection."
-                    5 -> "GPS is disabled. Please enable location services."
-                    6 -> "Device network is disabled."
-                    15 -> "AMap API Key is invalid. Check your API key configuration."
-                    else -> "Location failed (error $errorCode): $errorInfo"
+            Log.d(TAG, "doTest started")
+            try {
+                val context = getApplication<Application>()
+                val location = try {
+                    Log.d(TAG, "Getting location...")
+                    locationHelper.getCurrentLocation()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Location exception: ${e.message}", e)
+                    null
                 }
-                Log.e("NetTestViewModel", errorMessage)
-                onError(errorMessage)
+
+                if (location == null) {
+                    Log.w(TAG, "Location is null")
+                    val (errorCode, errorInfo) = locationHelper.getLastError()
+                    val errorMessage = when (errorCode) {
+                        0 -> "Unknown location error"
+                        -1 -> "Location permission denied. Please grant location permission."
+                        -2 -> "Location client initialization failed: $errorInfo"
+                        -3 -> "Location callback returned null"
+                        12 -> "Missing required location permission. Check AndroidManifest.xml."
+                        4 -> "Network error. Check internet connection."
+                        5 -> "GPS is disabled. Please enable location services."
+                        6 -> "Device network is disabled."
+                        15 -> "AMap API Key is invalid. Check your API key configuration."
+                        else -> "Location failed (error $errorCode): $errorInfo"
+                    }
+                    Log.e(TAG, errorMessage)
+                    onError(errorMessage)
+                    onFinish?.invoke()
+                    return@launch
+                }
+
+                Log.d(TAG, "Location obtained: ${location.latitude}, ${location.longitude}")
+
+                Log.d(TAG, "Measuring download speed...")
+                val download = SpeedTestHelper.measureDownloadSpeed()
+                Log.d(TAG, "Download: ${download} Mbps")
+
+                Log.d(TAG, "Measuring upload speed...")
+                val upload = SpeedTestHelper.measureUploadSpeed()
+                Log.d(TAG, "Upload: ${upload} Mbps")
+
+                Log.d(TAG, "Measuring ping...")
+                val ping = SpeedTestHelper.measurePing()
+                Log.d(TAG, "Ping: ${ping} ms")
+
+                val timeStr = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+                val result = NetTestResult(
+                    timestamp = timeStr,
+                    latitude = location.latitude,
+                    longitude = location.longitude,
+                    upload = upload,
+                    download = download,
+                    ping = ping
+                )
+
+                _curResult.value = result
+                _testResults.value = _testResults.value + result
+                Log.d(TAG, "Test result added. Total: ${_testResults.value.size}")
+            } catch (e: Exception) {
+                Log.e(TAG, "doTest exception: ${e.message}", e)
+                onError("Test failed: ${e.message}")
+            } finally {
+                _isTesting.value = false
+                Log.d(TAG, "doTest finished, _isTesting=false")
                 onFinish?.invoke()
-                return@launch
             }
-
-            val download = SpeedTestHelper.measureDownloadSpeed()
-            val upload = SpeedTestHelper.measureUploadSpeed()
-            val ping = SpeedTestHelper.measurePing()
-
-            val timeStr = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
-            val result = NetTestResult(
-                timestamp = timeStr,
-                latitude = location.latitude,
-                longitude = location.longitude,
-                upload = upload,
-                download = download,
-                ping = ping
-            )
-
-            _curResult.value = result
-            _testResults.value = _testResults.value + result
-            _isTesting.value = false
-            onFinish?.invoke()
         }
     }
 
     fun startAutoTest() {
         if (_isAutoTesting.value) return
         _isAutoTesting.value = true
+        Log.d(TAG, "startAutoTest: auto testing started")
         val job = coroutineScope.launch {
+            var count = 0
             while (_isAutoTesting.value) {
+                count++
+                Log.d(TAG, "Auto test iteration $count")
                 val deferred = CompletableDeferred<Unit>()
-                doTest { deferred.complete(Unit) }
-                deferred.await()
+                // 确保 onFinish 不会抛出异常
+                doTest(
+                    onFinish = {
+                        Log.d(TAG, "doTest onFinish called")
+                        try {
+                            deferred.complete(Unit)
+                        } catch (e: Exception) {
+                            Log.e(TAG, "deferred complete failed: ${e.message}", e)
+                        }
+                    },
+                    onError = { err ->
+                        Log.e(TAG, "doTest error: $err")
+                        try {
+                            deferred.complete(Unit) // 即使错误也继续
+                        } catch (e: Exception) {
+                            Log.e(TAG, "deferred complete failed: ${e.message}", e)
+                        }
+                    }
+                )
+                Log.d(TAG, "Waiting for deferred...")
+                try {
+                    deferred.await()
+                    Log.d(TAG, "Deferred completed")
+                } catch (e: Exception) {
+                    Log.e(TAG, "deferred.await exception: ${e.message}", e)
+                }
                 if (_isAutoTesting.value) {
-                    delay(5000)
+                    Log.d(TAG, "Waiting 5 seconds before next test...")
+                    try {
+                        delay(5000)
+                    } catch (e: Exception) {
+                        Log.e(TAG, "delay interrupted: ${e.message}", e)
+                    }
                 }
             }
+            Log.d(TAG, "Auto test loop exited")
         }
         _autoJob.value = job
     }

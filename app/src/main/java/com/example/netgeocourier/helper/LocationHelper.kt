@@ -13,6 +13,8 @@ import com.amap.api.location.AMapLocationClient
 import com.amap.api.location.AMapLocationClientOption
 import com.amap.api.location.AMapLocationListener
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeout
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.coroutines.resume
 
 private const val TAG = "LocationHelper"
@@ -92,49 +94,51 @@ class LocationHelper(private val context: Context) : AMapLocationListener {
     }
 
     /**
-     * 获取当前定位信息（协程挂起方式）
+     * 获取当前定位信息（协程挂起方式），带25秒超时
      */
-    suspend fun getCurrentLocation() = suspendCancellableCoroutine { cont ->
-        Log.d(TAG, "getCurrentLocation() called")
-        
-        // 检查权限
-        if (!PermissionHelper.hasLocationPermission(context)) {
-            Log.w(TAG, "No location permission")
-            lastErrorCode = -1
-            lastErrorInfo = "Location permission denied"
-            cont.resume(null)
-            return@suspendCancellableCoroutine
-        }
+    suspend fun getCurrentLocation() = withTimeout(25000.milliseconds) {
+        suspendCancellableCoroutine<AMapLocation?> { cont ->
+            Log.d(TAG, "getCurrentLocation() called")
 
-        locationContinuation = cont
-
-        try {
-            Log.d(TAG, "Initializing AMapLocationClient...")
-            
-            // 【必须】隐私合规：在初始化 AMapLocationClient 之前调用
-            // 根据高德SDK 8.1.0+ 要求
-            AMapLocationClient.updatePrivacyShow(context, true, true)
-            AMapLocationClient.updatePrivacyAgree(context, true)
-            Log.d(TAG, "Privacy compliance updated")
-            
-            // 初始化定位客户端（需要捕获异常）
-            locationClient = AMapLocationClient(context.applicationContext).apply {
-                setLocationListener(this@LocationHelper)
-                setLocationOption(createLocationOption())
-                startLocation()
+            // 检查权限
+            if (!PermissionHelper.hasLocationPermission(context)) {
+                Log.w(TAG, "No location permission")
+                lastErrorCode = -1
+                lastErrorInfo = "Location permission denied"
+                cont.resume(null)
+                return@suspendCancellableCoroutine
             }
-            Log.d(TAG, "AMapLocationClient started")
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to start location client: ${e.message}", e)
-            lastErrorCode = -2
-            lastErrorInfo = "Client init failed: ${e.message}"
-            cont.resume(null)
-        }
 
-        cont.invokeOnCancellation {
-            Log.d(TAG, "Location request cancelled")
-            stopLocation()
-            locationContinuation = null
+            locationContinuation = cont
+
+            try {
+                Log.d(TAG, "Initializing AMapLocationClient...")
+
+                // 隐私合规
+                AMapLocationClient.updatePrivacyShow(context, true, true)
+                AMapLocationClient.updatePrivacyAgree(context, true)
+                Log.d(TAG, "Privacy compliance updated")
+
+                locationClient = AMapLocationClient(context.applicationContext).apply {
+                    setLocationListener(this@LocationHelper)
+                    setLocationOption(createLocationOption())
+                    startLocation()
+                }
+                Log.d(TAG, "AMapLocationClient started")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to start location client: ${e.message}", e)
+                lastErrorCode = -2
+                lastErrorInfo = "Client init failed: ${e.message}"
+                cont.resume(null)
+            }
+
+            cont.invokeOnCancellation {
+                Log.d(TAG, "Location request cancelled or timeout")
+                lastErrorCode = -3
+                lastErrorInfo = "Location timeout or cancelled"
+                stopLocation()
+                locationContinuation = null
+            }
         }
     }
 
