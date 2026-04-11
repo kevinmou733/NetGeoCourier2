@@ -3,6 +3,7 @@ package com.example.netgeocourier.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.netgeocourier.R
 import com.example.netgeocourier.data.NetTestResult
 import com.example.netgeocourier.helper.LocationHelper
 import com.example.netgeocourier.helper.SpeedTestHelper
@@ -69,7 +70,7 @@ class NetTestViewModel(application: Application) : AndroidViewModel(application)
             val location = locationHelper.getCurrentLocation()
             if (location == null) {
                 _isTesting.value = false
-                onError("Failed to get location. Please check permissions.")
+                onError(context.getString(R.string.failed_get_location))
                 onFinish?.invoke()
                 return@launch
             }

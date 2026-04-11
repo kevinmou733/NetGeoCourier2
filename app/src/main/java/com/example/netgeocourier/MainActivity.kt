@@ -57,11 +57,11 @@ class MainActivity : ComponentActivity() {
         // 没有权限，请求权限
         PermissionHelper.registerPermissionLauncher(this) { allGranted ->
             if (allGranted) {
-                Toast.makeText(this, "Permissions granted", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.permissions_granted), Toast.LENGTH_SHORT).show()
             } else {
                 Toast.makeText(
                     this,
-                    "Location permission is required for network testing",
+                    getString(R.string.location_permission_denied),
                     Toast.LENGTH_LONG
                 ).show()
             }

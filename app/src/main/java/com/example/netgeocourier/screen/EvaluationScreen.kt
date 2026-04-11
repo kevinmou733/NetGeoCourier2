@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-//import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -33,8 +32,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.netgeocourier.R
 import com.example.netgeocourier.data.EvaluationData
 import com.example.netgeocourier.helper.AuthTokenStore
 import com.example.netgeocourier.network.ApiClient
@@ -101,12 +102,12 @@ fun EvaluationScreen(onBack: () -> Unit) {
         ) {
             Column {
                 Text(
-                    text = "Network Evaluation",
+                    text = stringResource(R.string.network_evaluation),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "Pulls GET /api/v1/evaluation with the saved Bearer token.",
+                    text = stringResource(R.string.evaluation_api_description),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -123,13 +124,13 @@ fun EvaluationScreen(onBack: () -> Unit) {
                 onClick = onBack,
                 modifier = Modifier.weight(1f)
             ) {
-                Text("Back")
+                Text(stringResource(R.string.back))
             }
             Button(
                 onClick = { loadEvaluation() },
                 modifier = Modifier.weight(1f)
             ) {
-                Text("Refresh")
+                Text(stringResource(R.string.refresh))
             }
         }
 
@@ -157,7 +158,7 @@ fun EvaluationScreen(onBack: () -> Unit) {
 
             else -> {
                 StatusCard(
-                    title = if (uiState.tokenMissing) "Token Required" else "Request Failed",
+                    title = if (uiState.tokenMissing) stringResource(R.string.token_required) else stringResource(R.string.request_failed),
                     message = uiState.errorMessage ?: "Unknown error.",
                     showHint = uiState.tokenMissing
                 )
@@ -176,7 +177,7 @@ private fun EvaluationSummaryCard(data: EvaluationData) {
     ) {
         Column(modifier = Modifier.padding(18.dp)) {
             Text(
-                text = "Overall Score",
+                text = stringResource(R.string.overall_score),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
@@ -191,7 +192,7 @@ private fun EvaluationSummaryCard(data: EvaluationData) {
             LevelBadge(level = data.level)
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = "Record count: ${data.recordCount}",
+                text = stringResource(R.string.record_count, data.recordCount),
                 style = MaterialTheme.typography.bodyLarge
             )
         }
@@ -209,7 +210,7 @@ private fun LevelBadge(level: String) {
         color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
     ) {
         Text(
-            text = "Level: $label",
+            text = "${stringResource(R.string.level)}: $label",
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
             color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.Medium
@@ -222,18 +223,18 @@ private fun MetricsCard(data: EvaluationData) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(18.dp)) {
             Text(
-                text = "Metrics",
+                text = stringResource(R.string.metrics),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = Modifier.height(12.dp))
-            MetricRow(label = "Average download", value = formatMetric(data.metrics.downloadAvg, "Mbps"))
+            MetricRow(label = stringResource(R.string.average_download), value = formatMetric(data.metrics.downloadAvg, stringResource(R.string.unit_mbps_short)))
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-            MetricRow(label = "Average ping", value = formatMetric(data.metrics.pingAvg, "ms"))
+            MetricRow(label = stringResource(R.string.average_ping), value = formatMetric(data.metrics.pingAvg, stringResource(R.string.unit_ms_short)))
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-            MetricRow(label = "Average RSSI", value = formatMetric(data.metrics.rssiAvg, "dBm"))
+            MetricRow(label = stringResource(R.string.average_rssi), value = formatMetric(data.metrics.rssiAvg, stringResource(R.string.unit_dbm)))
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-            MetricRow(label = "Average SNR", value = formatMetric(data.metrics.snrAvg, "dB"))
+            MetricRow(label = stringResource(R.string.average_snr), value = formatMetric(data.metrics.snrAvg, stringResource(R.string.unit_db)))
         }
     }
 }
@@ -243,7 +244,7 @@ private fun SuggestionsCard(suggestions: List<String>) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(18.dp)) {
             Text(
-                text = "Suggestions",
+                text = stringResource(R.string.suggestions),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
@@ -251,7 +252,7 @@ private fun SuggestionsCard(suggestions: List<String>) {
 
             if (suggestions.isEmpty()) {
                 Text(
-                    text = "No suggestions returned.",
+                    text = stringResource(R.string.no_suggestions),
                     style = MaterialTheme.typography.bodyMedium
                 )
             } else {
@@ -303,7 +304,7 @@ private fun StatusCard(title: String, message: String, showHint: Boolean) {
             if (showHint) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = "Save the login response field data.accessToken with AuthTokenStore.saveAccessToken(context, accessToken).",
+                    text = stringResource(R.string.token_save_instruction),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -327,10 +328,10 @@ private fun MetricRow(label: String, value: String) {
         )
     }
 }
-
+@Composable
 private fun formatMetric(value: Double?, unit: String): String {
     if (value == null) {
-        return "--"
+        return stringResource(R.string.na)
     }
 
     val formatted = if (value % 1.0 == 0.0) {

@@ -54,21 +54,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.example.netgeocourier.R
 import com.example.netgeocourier.data.NetTestResult
-import com.example.netgeocourier.helper.CoordTransform
 import com.example.netgeocourier.helper.FileHelper
-import com.example.netgeocourier.helper.LocationHelper
 import com.example.netgeocourier.helper.SpeedTestHelper
-import kotlinx.coroutines.CompletableDeferred
+import com.example.netgeocourier.viewmodel.NetTestViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.collectAsState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
+import kotlin.math.sqrt
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.Locale
 import kotlin.math.sqrt
-import com.example.netgeocourier.viewmodel.NetTestViewModel
-import androidx.compose.runtime.collectAsState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -91,7 +92,7 @@ fun NetTestScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "NetGeoCourier",
+                        text = stringResource(R.string.app_name),
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp
                     )
@@ -117,7 +118,7 @@ fun NetTestScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "Network Test Controls",
+                        text = stringResource(R.string.network_test_controls),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -130,18 +131,16 @@ fun NetTestScreen(
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Button(
-                            onClick = {
-                                viewModel.doTest(
-                                    onError = { errorMessage ->
-                                        Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
-                                    }
-                                )
-                            },
+                            onClick = { viewModel.doTest(
+                                onError = { errorMessage ->
+                                    Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+                                }
+                            )},
                             enabled = !isTesting && !isAutoTesting,
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text("Start Test", fontSize = 14.sp)
+                            Text(stringResource(R.string.start_test), fontSize = 14.sp)
                         }
 
                         Button(
@@ -153,7 +152,7 @@ fun NetTestScreen(
                                 containerColor = MaterialTheme.colorScheme.error
                             )
                         ) {
-                            Text("Stop", fontSize = 14.sp)
+                            Text(stringResource(R.string.stop), fontSize = 14.sp)
                         }
                     }
 
@@ -169,7 +168,7 @@ fun NetTestScreen(
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text("Save CSV", fontSize = 14.sp)
+                            Text(stringResource(R.string.save_csv), fontSize = 14.sp)
                         }
 
                         Button(
@@ -181,7 +180,7 @@ fun NetTestScreen(
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             Text(
-                                text = if (isAutoTesting) "Stop Auto" else "Auto Test",
+                                text = if (isAutoTesting) stringResource(R.string.stop_auto) else stringResource(R.string.auto_test),
                                 fontSize = 14.sp
                             )
                         }
@@ -199,7 +198,7 @@ fun NetTestScreen(
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text("Generate Map", fontSize = 14.sp)
+                            Text(stringResource(R.string.generate_map), fontSize = 14.sp)
                         }
 
                         Button(
@@ -208,7 +207,7 @@ fun NetTestScreen(
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text("Send Email", fontSize = 14.sp)
+                            Text(stringResource(R.string.send_email), fontSize = 14.sp)
                         }
                     }
 
@@ -219,7 +218,7 @@ fun NetTestScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("Open Network Evaluation", fontSize = 14.sp)
+                        Text(stringResource(R.string.open_network_evaluation), fontSize = 14.sp)
                     }
                 }
             }
@@ -233,7 +232,7 @@ fun NetTestScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "Latest Result",
+                        text = stringResource(R.string.latest_result),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -252,7 +251,7 @@ fun NetTestScreen(
                             )
                         ) {
                             Text(
-                                text = "No test result yet.",
+                                text = stringResource(R.string.no_test_result_yet),
                                 modifier = Modifier.padding(32.dp),
                                 textAlign = TextAlign.Center,
                                 fontSize = 14.sp,
@@ -278,13 +277,13 @@ fun NetTestScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Speed Trend",
+                                text = stringResource(R.string.speed_trend),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
                             )
                             Text(
-                                text = "${testResults.size} records",
+                                text = "${testResults.size} ${stringResource(R.string.records)}",
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -303,7 +302,7 @@ fun NetTestScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
-                            text = "Tap a chart point to see details.",
+                            text = stringResource(R.string.tap_chart_point_details),
                             fontSize = 10.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.fillMaxWidth(),
@@ -322,7 +321,7 @@ fun NetTestScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "History",
+                        text = stringResource(R.string.history),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -339,7 +338,7 @@ fun NetTestScreen(
                             )
                         ) {
                             Text(
-                                text = "No history data. Start a test first.",
+                                text = stringResource(R.string.no_history_data),
                                 modifier = Modifier.padding(32.dp),
                                 textAlign = TextAlign.Center,
                                 fontSize = 14.sp,
@@ -379,19 +378,19 @@ fun ResultDetailCard(result: NetTestResult) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                SpeedItem(label = "Download", value = result.download.toFloat(), color = Color(0xFF4285F4))
-                SpeedItem(label = "Upload", value = result.upload.toFloat(), color = Color(0xFFEA4335))
-                SpeedItem(label = "Ping", value = result.ping.toFloat(), color = Color(0xFF34A853), unit = "ms")
-            }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    SpeedItem(label = stringResource(R.string.download), value = result.download.toFloat(), color = Color(0xFF4285F4))
+                    SpeedItem(label = stringResource(R.string.upload), value = result.upload.toFloat(), color = Color(0xFFEA4335))
+                    SpeedItem(label = stringResource(R.string.ping), value = result.ping.toFloat(), color = Color(0xFF34A853), unit = stringResource(R.string.unit_ms_short))
+                }
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Location: ${"%.4f".format(gcjLat)}, ${"%.4f".format(gcjLon)}",
+                text = "${stringResource(R.string.location)}: ${"%.4f".format(gcjLat)}, ${"%.4f".format(gcjLon)}",
                 fontSize = 10.sp,
                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
             )
@@ -445,12 +444,12 @@ fun ResultDetailItem(result: NetTestResult, isFirst: Boolean) {
                     fontWeight = FontWeight.Medium
                 )
                 Text(
-                    text = "D ${String.format(Locale.US, "%.2f", result.download)} Mbps | U ${String.format(Locale.US, "%.2f", result.upload)} Mbps",
+                    text = "${stringResource(R.string.download)} ${String.format(Locale.US, "%.2f", result.download)} ${stringResource(R.string.unit_mbps_short)} | ${stringResource(R.string.upload)} ${String.format(Locale.US, "%.2f", result.upload)} ${stringResource(R.string.unit_mbps_short)}",
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = "L ${"%.4f".format(gcjLat)}, ${"%.4f".format(gcjLon)}",
+                    text = "${stringResource(R.string.location)} ${"%.4f".format(gcjLat)}, ${"%.4f".format(gcjLon)}",
                     fontSize = 10.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 )
@@ -503,27 +502,27 @@ fun SimpleSpeedChart(testResults: List<NetTestResult>) {
             onDismissRequest = { showDialog = false },
             title = {
                 Text(
-                    text = "Test ${selectedIndex + 1}",
+                    text = stringResource(R.string.test_dialog_title, selectedIndex + 1),
                     fontWeight = FontWeight.Bold
                 )
             },
             text = {
                 Column {
-                    Text(text = "Time: ${selectedResult!!.timestamp}", fontSize = 14.sp)
+                    Text(text = "${stringResource(R.string.time_label)}: ${selectedResult!!.timestamp}", fontSize = 14.sp)
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        SpeedItem(label = "Download", value = selectedResult!!.download.toFloat(), color = Color(0xFF4285F4))
-                        SpeedItem(label = "Upload", value = selectedResult!!.upload.toFloat(), color = Color(0xFFEA4335))
-                        SpeedItem(label = "Ping", value = selectedResult!!.ping.toFloat(), color = Color(0xFF34A853), unit = "ms")
+                        SpeedItem(label = stringResource(R.string.download), value = selectedResult!!.download.toFloat(), color = Color(0xFF4285F4))
+                        SpeedItem(label = stringResource(R.string.upload), value = selectedResult!!.upload.toFloat(), color = Color(0xFFEA4335))
+                        SpeedItem(label = stringResource(R.string.ping), value = selectedResult!!.ping.toFloat(), color = Color(0xFF34A853), unit = stringResource(R.string.unit_ms_short))
                     }
                 }
             },
             confirmButton = {
                 TextButton(onClick = { showDialog = false }) {
-                    Text("Close")
+                    Text(stringResource(R.string.close))
                 }
             }
         )
@@ -541,11 +540,11 @@ fun SpeedChartCanvas(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = "Need at least 2 records to draw the chart.",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 12.sp
-            )
+                Text(
+                    text = stringResource(R.string.need_two_records),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 12.sp
+                )
         }
         return
     }

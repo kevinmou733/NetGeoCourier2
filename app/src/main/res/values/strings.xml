@@ -1,3 +1,76 @@
-﻿<resources>
+<resources>
+    <!-- App 名称 -->
     <string name="app_name">NetGeoCourier</string>
+
+    <!-- 通用按钮 -->
+    <string name="start_test">Start Test</string>
+    <string name="stop">Stop</string>
+    <string name="auto_test">Auto Test</string>
+    <string name="stop_auto">Stop Auto</string>
+    <string name="save_csv">Save CSV</string>
+    <string name="generate_map">Generate Map</string>
+    <string name="send_email">Send Email</string>
+    <string name="open_network_evaluation">Open Network Evaluation</string>
+    <string name="back">Back</string>
+    <string name="refresh">Refresh</string>
+    <string name="close">Close</string>
+
+    <!-- 测试结果 -->
+    <string name="latest_result">Latest Result</string>
+    <string name="no_test_result_yet">No test result yet.</string>
+    <string name="speed_trend">Speed Trend</string>
+    <string name="tap_chart_point_details">Tap a chart point to see details.</string>
+    <string name="no_history_data">No history data. Start a test first.</string>
+    <string name="need_two_records">Need at least 2 records to draw the chart.</string>
+    <string name="records">records</string>
+
+    <!-- 网络测速标签 -->
+    <string name="download">Download</string>
+    <string name="upload">Upload</string>
+    <string name="ping">Ping</string>
+    <string name="unit_mbps">Mbps</string>
+    <string name="unit_ms">ms</string>
+
+    <!-- 位置 -->
+    <string name="location">Location</string>
+    <string name="location_format">%.4f, %.4f</string>
+
+    <!-- 错误提示 -->
+    <string name="failed_get_location">Failed to get location. Please check permissions.</string>
+    <string name="permissions_granted">Permissions granted</string>
+    <string name="location_permission_required">Location permission is required for network testing</string>
+    <string name="location_permission_denied">Location permission denied. Please enable in Settings.</string>
+
+    <!-- 网络评估页面 -->
+    <string name="network_evaluation">Network Evaluation</string>
+    <string name="evaluation_api_description">Pulls GET /api/v1/evaluation with the saved Bearer token.</string>
+    <string name="overall_score">Overall Score</string>
+    <string name="level">Level</string>
+    <string name="record_count">Record count: %d</string>
+    <string name="metrics">Metrics</string>
+    <string name="average_download">Average download</string>
+    <string name="average_ping">Average ping</string>
+    <string name="average_rssi">Average RSSI</string>
+    <string name="average_snr">Average SNR</string>
+    <string name="suggestions">Suggestions</string>
+    <string name="no_suggestions">No suggestions returned.</string>
+    <string name="token_required">Token Required</string>
+    <string name="request_failed">Request Failed</string>
+    <string name="token_save_instruction">Save the login response field data.accessToken with AuthTokenStore.saveAccessToken(context, accessToken).</string>
+
+    <!-- 单位 -->
+    <string name="unit_mbps_short">Mbps</string>
+    <string name="unit_ms_short">ms</string>
+    <string name="unit_dbm">dBm</string>
+    <string name="unit_db">dB</string>
+
+    <!-- 新增：界面标题 -->
+    <string name="network_test_controls">Network Test Controls</string>
+    <string name="history">History</string>
+    <string name="test_dialog_title">Test %d</string>
+    <string name="time_label">Time: %s</string>
+    <string name="speed_label">%s: %.2f %s</string>
+
+    <!-- 空值占位符 -->
+    <string name="na">--</string>
 </resources>
