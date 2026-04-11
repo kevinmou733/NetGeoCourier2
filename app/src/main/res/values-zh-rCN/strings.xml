@@ -3,39 +3,52 @@
 
     <string name="start_test">开始测速</string>
     <string name="stop">停止</string>
-    <string name="auto_test">自动测速</string>
-    <string name="stop_auto">停止自动测速</string>
-    <string name="save_csv">导出 CSV</string>
+
+    <string name="auto_test">自动测试</string>
+    <string name="stop_auto">停止自动</string>
+    <string name="save_csv">保存数据</string>
+
     <string name="generate_map">生成地图</string>
-    <string name="send_email">发送邮件</string>
+    <string name="send_email">导出数据</string>
     <string name="open_network_evaluation">打开网络评估</string>
     <string name="back">返回</string>
     <string name="refresh">刷新</string>
     <string name="close">关闭</string>
+    <string name="delete">删除</string>
+    <string name="cancel">取消</string>
+
+    <!-- 数据目录 -->
+    <string name="open_data_folder">打开数据目录</string>
 
     <string name="latest_result">最新结果</string>
     <string name="no_test_result_yet">暂无测速结果</string>
     <string name="speed_trend">速度趋势</string>
-    <string name="tap_chart_point_details">点击图表节点查看详情</string>
-    <string name="no_history_data">暂无历史数据，请先完成一次测速</string>
-    <string name="need_two_records">至少需要 2 条记录才能绘制图表</string>
+
+    <string name="tap_chart_point_details">点击图表点查看详情。</string>
+    <string name="no_history_data">暂无历史数据，请先进行测试。</string>
+    <string name="need_two_records">至少需要2条记录才能绘制图表。</string>
+
     <string name="records">条记录</string>
 
     <string name="download">下载</string>
     <string name="upload">上传</string>
     <string name="ping">延迟</string>
     <string name="unit_mbps">Mbps</string>
-    <string name="unit_ms">毫秒</string>
+    <string name="unit_ms">ms</string>
 
     <string name="location">位置</string>
     <string name="location_format">%.4f, %.4f</string>
 
-    <string name="failed_get_location">获取定位失败，请检查权限。</string>
+
+    <!-- 错误提示 -->
+    <string name="failed_get_location">获取位置失败，请检查权限。</string>
     <string name="permissions_granted">权限已授予</string>
-    <string name="location_permission_required">网络测速需要定位权限</string>
-    <string name="location_permission_denied">定位权限被拒绝，请前往设置开启。</string>
+    <string name="location_permission_required">网络测试需要位置权限</string>
+    <string name="location_permission_denied">位置权限被拒绝，请在设置中启用。</string>
+
 
     <string name="network_evaluation">网络评估</string>
+
     <string name="evaluation_api_description">查看基于已同步测速记录生成的个人网络评估。</string>
     <string name="overall_score">综合评分</string>
     <string name="level">等级</string>
@@ -45,21 +58,25 @@
     <string name="level_poor">较差</string>
     <string name="level_no_data">暂无数据</string>
     <string name="record_count">记录数：%d</string>
+
     <string name="metrics">指标</string>
     <string name="average_download">平均下载速度</string>
     <string name="average_ping">平均延迟</string>
     <string name="average_rssi">平均 RSSI</string>
     <string name="average_snr">平均 SNR</string>
     <string name="suggestions">建议</string>
+
     <string name="no_suggestions">暂无建议</string>
     <string name="token_required">需要登录</string>
     <string name="request_failed">请求失败</string>
     <string name="token_save_instruction">请保存登录响应中的 data.accessToken。</string>
 
+
     <string name="unit_mbps_short">Mbps</string>
-    <string name="unit_ms_short">毫秒</string>
+    <string name="unit_ms_short">ms</string>
     <string name="unit_dbm">dBm</string>
     <string name="unit_db">dB</string>
+
 
     <string name="network_test_controls">网络测速控制</string>
     <string name="history">历史记录</string>
@@ -67,6 +84,7 @@
     <string name="time_label">时间</string>
     <string name="speed_label">%1$s：%2$.2f %3$s</string>
     <string name="na">--</string>
+
 
     <string name="auth_title">账号中心</string>
     <string name="auth_subtitle">现在支持直接在应用内注册、登录并自动保存令牌。</string>
@@ -103,4 +121,5 @@
     <string name="evaluation_open_auth">去登录 / 注册</string>
     <string name="evaluation_missing_auth">请先登录或注册后再查看个人评估。</string>
     <string name="unknown_error">未知错误。</string>
+
 </resources>
