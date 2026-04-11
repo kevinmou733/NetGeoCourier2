@@ -20,8 +20,18 @@ import kotlinx.coroutines.flow.asStateFlow
 import java.text.SimpleDateFormat
 import java.util.*
 
-class NetTestViewModel(application: Application) : AndroidViewModel(application) {
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.ViewModel
 
+// 页面枚举
+enum class AppPage {
+    TEST, EVALUATION
+}
+
+class NetTestViewModel(application: Application) : AndroidViewModel(application) {
+    var currentPage by mutableStateOf(AppPage.TEST)
     //private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(application)
     val locationHelper = LocationHelper(application)
 
