@@ -1,4 +1,4 @@
-import java.util.Properties
+﻿import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -13,9 +13,9 @@ if (localFile.exists()) {
     }
 }
 
-// 读取两个Key
-val AMAP_WEB_KEY = localProperties.getProperty("AMAP_WEB_KEY", "")
-val AMAP_ANDROID_KEY = localProperties.getProperty("AMAP_ANDROID_KEY", "")
+val amapWebKey = localProperties.getProperty("AMAP_WEB_KEY", "")
+val amapAndroidKey = localProperties.getProperty("AMAP_ANDROID_KEY", "")
+val apiBaseUrl = localProperties.getProperty("API_BASE_URL", "http://10.0.2.2:3000/")
 
 android {
     namespace = "com.example.netgeocourier"
@@ -33,10 +33,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "AMAP_WEB_KEY", "\"$AMAP_WEB_KEY\"")
-        manifestPlaceholders["AMAP_KEY"] = AMAP_ANDROID_KEY
-        //buildConfigField("String", "AMAP_WEB_KEY", "\"${project.findProperty("AMAP_WEB_KEY") ?: ""}\"")
-        //manifestPlaceholders["AMAP_KEY"] = project.findProperty("AMAP_ANDROID_KEY") ?: ""
+        buildConfigField("String", "AMAP_WEB_KEY", "\"$amapWebKey\"")
+        buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
+        manifestPlaceholders["AMAP_KEY"] = amapAndroidKey
     }
 
     buildTypes {
@@ -49,13 +48,16 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = "11"
     }
+
     buildFeatures {
         compose = true
         buildConfig = true
@@ -65,6 +67,7 @@ android {
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1")
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
@@ -74,6 +77,10 @@ dependencies {
    // implementation("com.google.android.gms:play-services-location:21.0.1")
     implementation(libs.amap.location)
     implementation("androidx.fragment:fragment-ktx:1.6.2")
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -84,6 +91,9 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-extensions:2.2.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
 
+// Compose 状态持久化（rememberSaveable 必须依赖）
 
+    implementation(platform("androidx.compose:compose-bom:2024.03.00"))
+    implementation("androidx.compose.runtime:runtime-saveable:1.6.0")
 
 }

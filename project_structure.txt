@@ -1,0 +1,66 @@
+NetGeoCourier2 Project Structure
+================================
+
+app/src/main/java/com/example/netgeocourier/
+|-- MainActivity.kt
+|-- SplashActivity.kt
+|-- data/
+|   |-- EvaluationModels.kt
+|   `-- NetTestResult.kt
+|-- helper/
+|   |-- AuthTokenStore.kt
+|   |-- CoordTransform.kt
+|   |-- FileHelper.kt
+|   |-- LocationHelper.kt
+|   `-- SpeedTestHelper.kt
+|-- network/
+|   |-- ApiClient.kt
+|   |-- AuthInterceptor.kt
+|   |-- EvaluationApiService.kt
+|   `-- EvaluationRepository.kt
+|-- screen/
+|   |-- EvaluationScreen.kt
+|   `-- NetTestScreen.kt
+|-- ui/
+|   `-- theme/
+|       |-- Color.kt
+|       |-- Theme.kt
+|       `-- Type.kt
+`-- viewmodel/
+    `-- NetTestViewModel.kt
+
+app/src/main/res/
+|-- drawable/
+|   |-- ic_launcher_background.xml
+|   |-- ic_launcher_foreground.xml
+|   `-- test.jpg
+|-- layout/
+|   `-- activity_splash.xml
+|-- mipmap-anydpi/
+|   |-- ic_launcher.xml
+|   `-- ic_launcher_round.xml
+|-- mipmap-hdpi/
+|   |-- ic_launcher.webp
+|   `-- ic_launcher_round.webp
+|-- mipmap-mdpi/
+|   |-- ic_launcher.webp
+|   `-- ic_launcher_round.webp
+|-- mipmap-xhdpi/
+|   |-- ic_launcher.webp
+|   `-- ic_launcher_round.webp
+|-- mipmap-xxhdpi/
+|   |-- ic_launcher.webp
+|   `-- ic_launcher_round.webp
+|-- mipmap-xxxhdpi/
+|   |-- ic_launcher.webp
+|   `-- ic_launcher_round.webp
+|-- values/
+|   |-- colors.xml
+|   |-- strings.xml
+|   `-- themes.xml
+|-- values-en/
+|   `-- strings.xml
+`-- xml/
+    |-- backup_rules.xml
+    |-- data_extraction_rules.xml
+    `-- file_paths.xml

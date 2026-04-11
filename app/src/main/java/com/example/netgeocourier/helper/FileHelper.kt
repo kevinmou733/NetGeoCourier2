@@ -1,4 +1,4 @@
-package com.example.netgeocourier.helper
+﻿package com.example.netgeocourier.helper
 
 import android.content.Context
 import android.content.Intent
@@ -10,7 +10,6 @@ import com.example.netgeocourier.BuildConfig
 import com.example.netgeocourier.data.NetTestResult
 import java.io.File
 import java.io.FileOutputStream
-import java.util.Locale
 
 object FileHelper {
 
@@ -29,19 +28,19 @@ object FileHelper {
 
         FileOutputStream(file, true).bufferedWriter().use { out ->
             if (isNewFile) {
-                out.write("时间,经度(GCJ-02),纬度(GCJ-02),上行(Mbps),下行(Mbps),Ping(ms)\n")
+                out.write("timestamp,longitude_gcj02,latitude_gcj02,upload_mbps,download_mbps,ping_ms\n")
             }
             list.forEach {
                 val gcjLat = it.latitude
                 val gcjLon = it.longitude
                 out.write(
-                    "${it.timestamp},$gcjLon,${"%.2f".format(gcjLat)}," +
-                    "${"%.2f".format(it.upload)},${"%.2f".format(it.download)},${it.ping}\n"
+                    "${it.timestamp},$gcjLon,${"%.6f".format(gcjLat)}," +
+                        "${"%.2f".format(it.upload)},${"%.2f".format(it.download)},${it.ping}\n"
                 )
             }
         }
 
-        Toast.makeText(context, "CSV已保存: ${file.name}", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "CSV saved: ${file.name}", Toast.LENGTH_SHORT).show()
         return file.absolutePath
     }
 
@@ -51,7 +50,7 @@ object FileHelper {
         val key = BuildConfig.AMAP_WEB_KEY
 
         if (key.isBlank()) {
-            Toast.makeText(context, "请在 local.properties 中配置 AMAP_WEB_KEY", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "Please configure AMAP_WEB_KEY in local.properties", Toast.LENGTH_LONG).show()
             return null
         }
 
@@ -63,64 +62,75 @@ object FileHelper {
         val markers = list.joinToString("\n") { item ->
             val (lat, lon) = item.latitude to item.longitude
             """
-            |          new AMap.Marker({
-            |            position: [$lon, $lat],
-            |            map: map,
-            |            title: "${item.timestamp} 上:${"%.2f".format(item.upload)} 下:${"%.2f".format(item.download)}"
-            |          });
+            |new AMap.Marker({
+            |  position: [$lon, $lat],
+            |  map: map,
+            |  title: "${item.timestamp} upload ${"%.2f".format(item.upload)} download ${"%.2f".format(item.download)}"
+            |});
             """.trimMargin()
         }
 
         val html = """
             |<!DOCTYPE html>
-            |<html><head>
-            |<meta charset="utf-8">
-            |<title>网络测速地图</title>
-            |<style>html,body,#container{width:100%;height:100%;margin:0;padding:0;}</style>
-            |<script src="https://webapi.amap.com/maps?v=2.0&key=$key"></script>
+            |<html>
+            |<head>
+            |  <meta charset="utf-8">
+            |  <title>Network Test Map</title>
+            |  <style>html,body,#container{width:100%;height:100%;margin:0;padding:0;}</style>
+            |  <script src="https://webapi.amap.com/maps?v=2.0&key=$key"></script>
             |</head>
             |<body>
-            |<div id="container"></div>
-            |<script>
-            |  var map = new AMap.Map('container', {
-            |    resizeEnable: true,
-            |    zoom: 13,
-            |    center: [$centerLon, $centerLat]
-            |  });
-            |$markers
-            |</script></body></html>
+            |  <div id="container"></div>
+            |  <script>
+            |    var map = new AMap.Map('container', {
+            |      resizeEnable: true,
+            |      zoom: 13,
+            |      center: [$centerLon, $centerLat]
+            |    });
+            |    $markers
+            |  </script>
+            |</body>
+            |</html>
         """.trimMargin()
 
         file.writeText(html)
-        Toast.makeText(context, "地图HTML已生成: ${file.name}", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "Map HTML generated: ${file.name}", Toast.LENGTH_SHORT).show()
         return file.absolutePath
     }
 
     fun sendEmail(context: Context, csvPath: String?, htmlPath: String?) {
         if (csvPath == null && htmlPath == null) {
-            Toast.makeText(context, "没有可发送的文件", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "No files to send.", Toast.LENGTH_SHORT).show()
             return
         }
 
         val email = Intent(Intent.ACTION_SEND_MULTIPLE).apply {
             type = "application/octet-stream"
-            putExtra(Intent.EXTRA_SUBJECT, "网络测速数据")
+            putExtra(Intent.EXTRA_SUBJECT, "Network Test Data")
         }
 
         val uris = ArrayList<Uri>()
         csvPath?.let {
-            uris.add(FileProvider.getUriForFile(
-                context, "${context.packageName}.fileprovider", File(it)
-            ))
+            uris.add(
+                FileProvider.getUriForFile(
+                    context,
+                    "${context.packageName}.fileprovider",
+                    File(it)
+                )
+            )
         }
         htmlPath?.let {
-            uris.add(FileProvider.getUriForFile(
-                context, "${context.packageName}.fileprovider", File(it)
-            ))
+            uris.add(
+                FileProvider.getUriForFile(
+                    context,
+                    "${context.packageName}.fileprovider",
+                    File(it)
+                )
+            )
         }
 
         email.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
         email.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        context.startActivity(Intent.createChooser(email, "发送测速数据"))
+        context.startActivity(Intent.createChooser(email, "Send network test files"))
     }
 }
