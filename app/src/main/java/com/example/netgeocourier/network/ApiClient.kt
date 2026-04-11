@@ -1,35 +1,48 @@
-﻿package com.example.netgeocourier.network
+package com.example.netgeocourier.network
 
 import android.content.Context
 import com.example.netgeocourier.BuildConfig
+import com.example.netgeocourier.helper.ApiConfigStore
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object ApiClient {
-    @Volatile
-    private var evaluationApiService: EvaluationApiService? = null
-
-    fun evaluationService(context: Context): EvaluationApiService {
-        return evaluationApiService ?: synchronized(this) {
-            evaluationApiService ?: buildRetrofit(context.applicationContext)
-                .create(EvaluationApiService::class.java)
-                .also { evaluationApiService = it }
-        }
+    fun authService(context: Context): AuthApiService {
+        return buildRetrofit(baseUrl = ApiConfigStore.getBaseUrl(context), withAuth = false, context = null)
+            .create(AuthApiService::class.java)
     }
 
-    private fun buildRetrofit(context: Context): Retrofit {
-        val okHttpClient = OkHttpClient.Builder()
-            .addInterceptor(AuthInterceptor(context))
+    fun evaluationService(context: Context): EvaluationApiService {
+        return buildRetrofit(
+            baseUrl = ApiConfigStore.getBaseUrl(context),
+            withAuth = true,
+            context = context.applicationContext
+        ).create(EvaluationApiService::class.java)
+    }
+
+    fun recordService(context: Context): RecordApiService {
+        return buildRetrofit(
+            baseUrl = ApiConfigStore.getBaseUrl(context),
+            withAuth = true,
+            context = context.applicationContext
+        ).create(RecordApiService::class.java)
+    }
+
+    private fun buildRetrofit(baseUrl: String, withAuth: Boolean, context: Context?): Retrofit {
+        val clientBuilder = OkHttpClient.Builder()
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)
             .writeTimeout(15, TimeUnit.SECONDS)
-            .build()
+
+        if (withAuth && context != null) {
+            clientBuilder.addInterceptor(AuthInterceptor(context))
+        }
 
         return Retrofit.Builder()
-            .baseUrl(BuildConfig.API_BASE_URL)
-            .client(okHttpClient)
+            .baseUrl(baseUrl.ifBlank { BuildConfig.API_BASE_URL })
+            .client(clientBuilder.build())
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }

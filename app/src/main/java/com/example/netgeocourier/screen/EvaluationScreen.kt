@@ -51,8 +51,13 @@ private data class EvaluationUiState(
 )
 
 @Composable
-fun EvaluationScreen(onBack: () -> Unit) {
+fun EvaluationScreen(
+    onBack: () -> Unit,
+    onOpenAuth: () -> Unit,
+    onLogout: () -> Unit
+) {
     val context = LocalContext.current
+    val session = AuthTokenStore.getSession(context)
     val repository = remember(context) {
         EvaluationRepository(ApiClient.evaluationService(context))
     }
@@ -67,7 +72,7 @@ fun EvaluationScreen(onBack: () -> Unit) {
                 uiState = EvaluationUiState(
                     isLoading = false,
                     tokenMissing = true,
-                    errorMessage = "No saved access token was found. Save the login accessToken before opening this page."
+                    errorMessage = context.getString(R.string.evaluation_missing_auth)
                 )
                 return@launch
             }
@@ -79,7 +84,7 @@ fun EvaluationScreen(onBack: () -> Unit) {
                 }
                 .onFailure { throwable ->
                     uiState = EvaluationUiState(
-                        errorMessage = throwable.message ?: "Failed to load evaluation data."
+                        errorMessage = throwable.message ?: context.getString(R.string.request_failed)
                     )
                 }
         }
@@ -115,6 +120,50 @@ fun EvaluationScreen(onBack: () -> Unit) {
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+            )
+        ) {
+            Column(modifier = Modifier.padding(18.dp)) {
+                Text(
+                    text = if (session?.user == null) {
+                        stringResource(R.string.evaluation_session_title)
+                    } else {
+                        stringResource(R.string.evaluation_signed_in_title)
+                    },
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                if (session?.user != null) {
+                    Text(
+                        text = "${session.user.displayName} (${session.user.username})",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        OutlinedButton(onClick = onLogout) {
+                            Text(stringResource(R.string.session_sign_out))
+                        }
+                    }
+                } else {
+                    Text(
+                        text = stringResource(R.string.evaluation_signed_out_desc),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Button(onClick = onOpenAuth) {
+                        Text(stringResource(R.string.evaluation_open_auth))
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -159,8 +208,9 @@ fun EvaluationScreen(onBack: () -> Unit) {
             else -> {
                 StatusCard(
                     title = if (uiState.tokenMissing) stringResource(R.string.token_required) else stringResource(R.string.request_failed),
-                    message = uiState.errorMessage ?: "Unknown error.",
-                    showHint = uiState.tokenMissing
+                    message = uiState.errorMessage ?: stringResource(R.string.unknown_error),
+                    showLoginAction = true,
+                    onOpenAuth = onOpenAuth
                 )
             }
         }
@@ -201,8 +251,15 @@ private fun EvaluationSummaryCard(data: EvaluationData) {
 
 @Composable
 private fun LevelBadge(level: String) {
-    val label = level.replaceFirstChar {
-        if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
+    val label = when (level.lowercase(Locale.getDefault())) {
+        "excellent" -> stringResource(R.string.level_excellent)
+        "good" -> stringResource(R.string.level_good)
+        "fair" -> stringResource(R.string.level_fair)
+        "poor" -> stringResource(R.string.level_poor)
+        "no-data" -> stringResource(R.string.level_no_data)
+        else -> level.replaceFirstChar {
+            if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
+        }
     }
 
     Surface(
@@ -291,7 +348,7 @@ private fun SuggestionsCard(suggestions: List<String>) {
 }
 
 @Composable
-private fun StatusCard(title: String, message: String, showHint: Boolean) {
+private fun StatusCard(title: String, message: String, showLoginAction: Boolean, onOpenAuth: () -> Unit) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(18.dp)) {
             Text(
@@ -301,13 +358,11 @@ private fun StatusCard(title: String, message: String, showHint: Boolean) {
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(text = message, style = MaterialTheme.typography.bodyMedium)
-            if (showHint) {
+            if (showLoginAction) {
                 Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    text = stringResource(R.string.token_save_instruction),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Button(onClick = onOpenAuth) {
+                    Text(stringResource(R.string.evaluation_open_auth))
+                }
             }
         }
     }

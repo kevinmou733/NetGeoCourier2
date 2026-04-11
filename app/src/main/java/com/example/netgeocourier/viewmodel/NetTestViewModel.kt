@@ -8,9 +8,15 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.netgeocourier.R
 import com.example.netgeocourier.data.NetTestResult
+import com.example.netgeocourier.helper.AuthTokenStore
 import com.example.netgeocourier.helper.LocationHelper
 import com.example.netgeocourier.helper.SpeedTestHelper
 import com.example.netgeocourier.helper.FileHelper
+
+import com.example.netgeocourier.network.ApiClient
+import com.example.netgeocourier.network.RecordRepository
+
+
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -33,7 +39,7 @@ private const val TAG = "NetTestViewModel"
 
 // 页面枚举
 enum class AppPage {
-    TEST, EVALUATION
+    AUTH, TEST, EVALUATION
 }
 
 class NetTestViewModel(application: Application) : AndroidViewModel(application) {
@@ -66,6 +72,9 @@ class NetTestViewModel(application: Application) : AndroidViewModel(application)
     private var savedRecordCount = 0
 
     private val coroutineScope = CoroutineScope(Dispatchers.Main + viewModelScope.coroutineContext)
+    private val recordRepository = RecordRepository(
+        ApiClient.recordService(application.applicationContext)
+    )
 
     init {
         // 从CSV加载历史数据
@@ -163,6 +172,7 @@ class NetTestViewModel(application: Application) : AndroidViewModel(application)
 
                 _curResult.value = result
                 _testResults.value = _testResults.value + result
+                syncRecordIfNeeded(result)
 
                 // 自动追加到CSV（确保数据不丢失）
                 try {
@@ -183,6 +193,7 @@ class NetTestViewModel(application: Application) : AndroidViewModel(application)
                 Log.d(TAG, "doTest finished, _isTesting=false")
                 onFinish?.invoke()
             }
+
         }
     }
 
@@ -299,6 +310,20 @@ class NetTestViewModel(application: Application) : AndroidViewModel(application)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to delete history: ${e.message}", e)
             Toast.makeText(context, "Delete failed: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun syncRecordIfNeeded(result: NetTestResult) {
+        val context = getApplication<Application>()
+        if (AuthTokenStore.getAccessToken(context).isNullOrBlank()) {
+            return
+        }
+
+        coroutineScope.launch {
+            recordRepository.uploadResult(result)
+                .onFailure { throwable ->
+                    Log.w(TAG, "Failed to sync record: ${throwable.message}", throwable)
+                }
         }
     }
 

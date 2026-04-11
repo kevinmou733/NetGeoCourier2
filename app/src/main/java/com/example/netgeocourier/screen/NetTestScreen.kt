@@ -39,7 +39,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,19 +55,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
+import androidx.compose.runtime.collectAsState
 import com.example.netgeocourier.R
 import com.example.netgeocourier.data.NetTestResult
-import com.example.netgeocourier.helper.FileHelper
-import com.example.netgeocourier.helper.SpeedTestHelper
+import com.example.netgeocourier.helper.AuthTokenStore
 import com.example.netgeocourier.viewmodel.NetTestViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.runtime.collectAsState
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlin.math.sqrt
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import java.util.Locale
 import kotlin.math.sqrt
 
@@ -76,17 +67,20 @@ import kotlin.math.sqrt
 @Composable
 fun NetTestScreen(
     viewModel: NetTestViewModel,
-    onOpenEvaluation: () -> Unit
+    onOpenEvaluation: () -> Unit,
+    onOpenAuth: () -> Unit,
+    onLogout: () -> Unit
 ) {
     val context = LocalContext.current
+    val session = AuthTokenStore.getSession(context)
     val isTesting by viewModel.isTesting.collectAsState()
     val isAutoTesting by viewModel.isAutoTesting.collectAsState()
     val testResults by viewModel.testResults.collectAsState()
     val currentResult by viewModel.curResult.collectAsState()
     val csvPath by viewModel.csvPath.collectAsState()
     val htmlPath by viewModel.htmlPath.collectAsState()
+
     var showDeleteDialog by remember { mutableStateOf(false) }
-    val coroutineScope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
 
     Scaffold(
@@ -113,6 +107,65 @@ fun NetTestScreen(
                 .padding(16.dp)
                 .verticalScroll(scrollState)
         ) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                )
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = if (session == null) {
+                            stringResource(R.string.session_title)
+                        } else {
+                            stringResource(R.string.session_signed_in_title)
+                        },
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    if (session?.user != null) {
+                        Text(
+                            text = "${session.user.displayName} (${session.user.username})",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = stringResource(R.string.session_signed_in_desc),
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        OutlinedButton(
+                            onClick = onLogout,
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(stringResource(R.string.session_sign_out))
+                        }
+                    } else {
+                        Text(
+                            text = stringResource(R.string.session_signed_out_desc),
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Button(
+                            onClick = onOpenAuth,
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(stringResource(R.string.session_login_register))
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -230,7 +283,13 @@ fun NetTestScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     OutlinedButton(
-                        onClick = onOpenEvaluation,
+                        onClick = {
+                            if (session == null) {
+                                onOpenAuth()
+                            } else {
+                                onOpenEvaluation()
+                            }
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp)
                     ) {

@@ -60,23 +60,23 @@ function buildSuggestions(metrics) {
   const suggestions = [];
 
   if (metrics.downloadAvg !== null && metrics.downloadAvg < 20) {
-    suggestions.push("Download speed is low. Check whether the access point bandwidth is saturated.");
+    suggestions.push("下载速度偏低，建议检查当前接入点带宽是否已经接近饱和。");
   }
 
   if (metrics.pingAvg !== null && metrics.pingAvg > 80) {
-    suggestions.push("Ping is high. Try testing closer to the access point or reducing interference.");
+    suggestions.push("延迟偏高，建议靠近接入点重新测试，或排查周边干扰源。");
   }
 
   if (metrics.rssiAvg !== null && metrics.rssiAvg < -70) {
-    suggestions.push("RSSI is weak. Consider moving closer to the router or adjusting antenna placement.");
+    suggestions.push("RSSI 信号偏弱，建议靠近路由器或调整天线部署位置。");
   }
 
   if (metrics.snrAvg !== null && metrics.snrAvg < 20) {
-    suggestions.push("SNR is low. There may be strong radio interference in the current area.");
+    suggestions.push("SNR 偏低，当前区域可能存在较强的无线干扰。");
   }
 
   if (suggestions.length === 0) {
-    suggestions.push("Overall network status is stable. Keep monitoring during peak campus hours.");
+    suggestions.push("当前网络整体较稳定，建议继续关注校园高峰时段的表现。");
   }
 
   return suggestions;
@@ -135,7 +135,7 @@ const evaluationService = {
       return {
         score: 0,
         level: "no-data",
-        suggestions: ["No network records yet. Upload records before requesting an evaluation."],
+        suggestions: ["暂无网络记录，请先完成测速并同步后再查看评估。"],
         metrics,
         recordCount: 0,
       };

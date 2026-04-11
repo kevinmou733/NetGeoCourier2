@@ -37,7 +37,7 @@ const userRepository = {
       const usernameNormalized = normalizeUsername(input.username);
       const existing = data.users.find((user) => user.usernameNormalized === usernameNormalized);
       if (existing) {
-        throw createHttpError(409, "AUTH_USERNAME_EXISTS", "Username is already registered.");
+        throw createHttpError(409, "AUTH_USERNAME_EXISTS", "用户名已被注册。");
       }
 
       const now = new Date().toISOString();
