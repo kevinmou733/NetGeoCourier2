@@ -39,14 +39,16 @@ object PermissionHelper {
                 ) == PackageManager.PERMISSION_GRANTED
     }
 
-    fun registerPermissionLauncher(activity: ComponentActivity, onGranted: () -> Unit) {
+    fun registerPermissionLauncher(
+        activity: ComponentActivity,
+        onResult: (allGranted: Boolean) -> Unit
+    ) {
         activity.registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
         ) { permissions ->
-            if (permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
-                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true) {
-                onGranted()
-            }
+            val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
+            val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+            onResult(fineLocationGranted || coarseLocationGranted)
         }.launch(getRequiredPermissions())
     }
 }

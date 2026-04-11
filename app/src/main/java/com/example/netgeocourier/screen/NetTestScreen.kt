@@ -1,5 +1,6 @@
 ﻿package com.example.netgeocourier.screen
 
+
 import android.graphics.Paint
 import android.widget.Toast
 import androidx.compose.foundation.Canvas
@@ -66,80 +67,24 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import kotlin.math.sqrt
+import com.example.netgeocourier.viewmodel.NetTestViewModel
+import androidx.compose.runtime.collectAsState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NetTestScreen(
-    locationHelper: LocationHelper,
+    viewModel: NetTestViewModel,
     onOpenEvaluation: () -> Unit
 ) {
     val context = LocalContext.current
-    var isTesting by remember { mutableStateOf(false) }
-    var isAutoTesting by remember { mutableStateOf(false) }
-    var autoJob by remember { mutableStateOf<Job?>(null) }
-    var testResults by remember { mutableStateOf(listOf<NetTestResult>()) }
-    var currentResult by remember { mutableStateOf<NetTestResult?>(null) }
-    var csvPath by remember { mutableStateOf<String?>(null) }
-    var htmlPath by remember { mutableStateOf<String?>(null) }
+    val isTesting by viewModel.isTesting.collectAsState()
+    val isAutoTesting by viewModel.isAutoTesting.collectAsState()
+    val testResults by viewModel.testResults.collectAsState()
+    val currentResult by viewModel.curResult.collectAsState()
+    val csvPath by viewModel.csvPath.collectAsState()
+    val htmlPath by viewModel.htmlPath.collectAsState()
     val coroutineScope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
-
-    fun doTest(onFinish: (() -> Unit)? = null) {
-        isTesting = true
-        currentResult = null
-        coroutineScope.launch {
-            val location = locationHelper.getCurrentLocation()
-            if (location == null) {
-                Toast.makeText(context, "Failed to get location.", Toast.LENGTH_SHORT).show()
-                isTesting = false
-                onFinish?.invoke()
-                return@launch
-            }
-
-            val download = SpeedTestHelper.measureDownloadSpeed()
-            val upload = SpeedTestHelper.measureUploadSpeed()
-            val ping = SpeedTestHelper.measurePing()
-
-            val timeText = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
-            val result = NetTestResult(
-                timestamp = timeText,
-                latitude = location.latitude,
-                longitude = location.longitude,
-                upload = upload,
-                download = download,
-                ping = ping
-            )
-
-            currentResult = result
-            testResults = testResults + result
-            isTesting = false
-            onFinish?.invoke()
-        }
-    }
-
-    fun startAutoTest() {
-        if (isAutoTesting) {
-            return
-        }
-        isAutoTesting = true
-        autoJob = coroutineScope.launch {
-            while (isAutoTesting) {
-                val deferred = CompletableDeferred<Unit>()
-                doTest { deferred.complete(Unit) }
-                deferred.await()
-                if (isAutoTesting) {
-                    delay(5000)
-                }
-            }
-        }
-    }
-
-    fun stopAutoTest() {
-        isAutoTesting = false
-        autoJob?.cancel()
-        autoJob = null
-        isTesting = false
-    }
 
     Scaffold(
         topBar = {
@@ -185,7 +130,13 @@ fun NetTestScreen(
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Button(
-                            onClick = { doTest() },
+                            onClick = {
+                                viewModel.doTest(
+                                    onError = { errorMessage ->
+                                        Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+                                    }
+                                )
+                            },
                             enabled = !isTesting && !isAutoTesting,
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
@@ -194,7 +145,7 @@ fun NetTestScreen(
                         }
 
                         Button(
-                            onClick = { stopAutoTest() },
+                            onClick = { viewModel.stopAutoTest() },
                             enabled = isTesting || isAutoTesting,
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp),
@@ -213,7 +164,7 @@ fun NetTestScreen(
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Button(
-                            onClick = { csvPath = FileHelper.saveCsv(context, testResults) },
+                            onClick = { viewModel.saveCsv(context) },
                             enabled = testResults.isNotEmpty() && !isTesting && !isAutoTesting,
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
@@ -223,7 +174,7 @@ fun NetTestScreen(
 
                         Button(
                             onClick = {
-                                if (isAutoTesting) stopAutoTest() else startAutoTest()
+                                if (isAutoTesting) viewModel.stopAutoTest() else viewModel.startAutoTest()
                             },
                             enabled = !isTesting,
                             modifier = Modifier.weight(1f),
@@ -243,7 +194,7 @@ fun NetTestScreen(
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Button(
-                            onClick = { htmlPath = FileHelper.saveAmapHtml(context, testResults) },
+                            onClick = { viewModel.saveAmapHtml(context) },
                             enabled = testResults.isNotEmpty() && !isTesting && !isAutoTesting,
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
@@ -252,7 +203,7 @@ fun NetTestScreen(
                         }
 
                         Button(
-                            onClick = { FileHelper.sendEmail(context, csvPath, htmlPath) },
+                            onClick = { viewModel.sendEmail(context) },
                             enabled = testResults.isNotEmpty() && !isTesting && !isAutoTesting,
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)

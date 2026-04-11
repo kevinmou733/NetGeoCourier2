@@ -1,85 +1,7 @@
-﻿//package com.example.netgeocourier
-//
-//import android.os.Bundle
-//import androidx.activity.ComponentActivity
-//import androidx.activity.compose.setContent
-//import androidx.compose.foundation.layout.fillMaxSize
-//import androidx.compose.material3.MaterialTheme
-//import androidx.compose.material3.Surface
-//import androidx.compose.runtime.getValue
-//import androidx.compose.runtime.mutableStateOf
-//import androidx.compose.runtime.rememberSaveable
-//import androidx.compose.runtime.setValue
-//
-//import com.example.netgeocourier.helper.LocationHelper
-//import com.example.netgeocourier.helper.PermissionHelper
-//import com.example.netgeocourier.screen.EvaluationScreen
-//import com.example.netgeocourier.screen.NetTestScreen
-//import com.example.netgeocourier.ui.theme.NetGeoCourierTheme
-//
-//import androidx.compose.ui.Modifier
-//import androidx.lifecycle.ViewModelProvider
-//import androidx.lifecycle.get
-//import com.example.netgeocourier.viewmodel.NetTestViewModel
-////import com.google.android.gms.location.LocationServices
-//import android.os.Parcelable
-//import kotlinx.parcelize.Parcelize
-//
-//
-//@Parcelize
-//private enum class AppPage : Parcelable {
-//    TEST,
-//    EVALUATION
-//}
-//
-//class MainActivity : ComponentActivity() {
-//
-//    lateinit var viewmodel:NetTestViewModel   //定义viewmodel
-//
-//    private lateinit var locationHelper: LocationHelper
-//
-//    override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//
-//       // viewmodel = ViewModelProvider(this).get(NetTestViewModel::class.java)
-//        viewmodel = ViewModelProvider(this)[NetTestViewModel::class.java]
-//        locationHelper = LocationHelper(this)
-//
-//        setContent {
-//            var currentPage by rememberSaveable { mutableStateOf(AppPage.TEST) }
-//
-//            NetGeoCourierTheme {
-//                Surface(
-//                    modifier = Modifier.fillMaxSize(),
-//                    color = MaterialTheme.colorScheme.background
-//                ) {
-//                    when (currentPage) {
-//                        AppPage.TEST -> NetTestScreen(
-//                            locationHelper = locationHelper,
-//                            onOpenEvaluation = { currentPage = AppPage.EVALUATION }
-//                        )
-//
-//                        AppPage.EVALUATION -> EvaluationScreen(
-//                            onBack = { currentPage = AppPage.TEST }
-//                        )
-//                    }
-//                }
-//            }
-//        }
-//
-//        requestPermissions()
-//    }
-//
-//    private fun requestPermissions() {
-//        PermissionHelper.registerPermissionLauncher(this) {
-//            // Permission granted
-//
-//        }
-//    }
-//}
-package com.example.netgeocourier
+﻿package com.example.netgeocourier
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -95,16 +17,15 @@ import com.example.netgeocourier.ui.theme.NetGeoCourierTheme
 import com.example.netgeocourier.viewmodel.NetTestViewModel
 import com.example.netgeocourier.viewmodel.AppPage
 
+
 class MainActivity : ComponentActivity() {
 
     lateinit var viewmodel: NetTestViewModel
-    private lateinit var locationHelper: LocationHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         viewmodel = ViewModelProvider(this)[NetTestViewModel::class.java]
-        locationHelper = LocationHelper(this)
 
         setContent {
             NetGeoCourierTheme {
@@ -112,10 +33,9 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // 🔥 从 ViewModel 读取状态，旋转永远不丢
                     when (viewmodel.currentPage) {
                         AppPage.TEST -> NetTestScreen(
-                            locationHelper = locationHelper,
+                            viewModel = viewmodel,
                             onOpenEvaluation = { viewmodel.currentPage = AppPage.EVALUATION }
                         )
                         AppPage.EVALUATION -> EvaluationScreen(
@@ -125,10 +45,26 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-        requestPermissions()
+        requestPermissionsIfNeeded()
     }
 
-    private fun requestPermissions() {
-        PermissionHelper.registerPermissionLauncher(this) {}
+    private fun requestPermissionsIfNeeded() {
+        // 如果已经有权限，直接返回
+        if (PermissionHelper.hasLocationPermission(this)) {
+            return
+        }
+
+        // 没有权限，请求权限
+        PermissionHelper.registerPermissionLauncher(this) { allGranted ->
+            if (allGranted) {
+                Toast.makeText(this, "Permissions granted", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(
+                    this,
+                    "Location permission is required for network testing",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
     }
 }

@@ -58,17 +58,18 @@ class NetTestViewModel(application: Application) : AndroidViewModel(application)
 
     private val coroutineScope = CoroutineScope(Dispatchers.Main + viewModelScope.coroutineContext)
 
-    fun doTest(onFinish: (() -> Unit)? = null) {
+    fun doTest(onFinish: (() -> Unit)? = null, onError: (String) -> Unit = {}) {
         if (_isTesting.value || _isAutoTesting.value) return
-        
+
         _isTesting.value = true
         _curResult.value = null
-        
+
         coroutineScope.launch {
             val context = getApplication<Application>()
             val location = locationHelper.getCurrentLocation()
             if (location == null) {
                 _isTesting.value = false
+                onError("Failed to get location. Please check permissions.")
                 onFinish?.invoke()
                 return@launch
             }
