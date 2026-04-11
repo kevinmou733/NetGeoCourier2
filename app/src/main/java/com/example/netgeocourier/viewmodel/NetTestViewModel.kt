@@ -1,6 +1,7 @@
 package com.example.netgeocourier.viewmodel
 
 import android.app.Application
+import android.content.Intent
 import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
@@ -240,53 +241,44 @@ class NetTestViewModel(application: Application) : AndroidViewModel(application)
         _autoJob.value = null
     }
 
-    fun saveCsv(context: android.content.Context) {
-        val currentList = testResults.value
-        if (currentList.isEmpty()) {
-            Toast.makeText(context, "No data to save", Toast.LENGTH_SHORT).show()
+    fun openDataDirectory(context: android.content.Context) {
+        val csvFile = FileHelper.getCsvFile(context)
+        if (csvFile == null || !csvFile.exists()) {
+            Toast.makeText(context, "No data file found", Toast.LENGTH_SHORT).show()
             return
         }
-
-        // 检查是否有未保存的新数据
-        val hasNewData = savedRecordCount < currentList.size
-        if (hasNewData) {
-            val newRecords = currentList.subList(savedRecordCount, currentList.size)
-            val path = FileHelper.appendCsvRecords(context, newRecords)
-            if (path != null) {
-                savedRecordCount = currentList.size
-                _csvPath.value = path
-                Toast.makeText(context, "Saved ${newRecords.size} record(s)", Toast.LENGTH_SHORT).show()
+        try {
+            val uri = androidx.core.content.FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                csvFile.parentFile!!  // 获取父目录
+            )
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "resource/folder")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
-        } else {
-            Toast.makeText(context, "All data already saved", Toast.LENGTH_SHORT).show()
+            context.startActivity(Intent.createChooser(intent, "Open data folder"))
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to open data directory: ${e.message}", e)
+            Toast.makeText(context, "Cannot open folder: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 
     fun saveAmapHtml(context: android.content.Context) {
-        // 仅生成并显示地图，不保存文件
-        val htmlContent = FileHelper.generateAmapHtmlContent(context, testResults.value)
-        if (htmlContent != null) {
-            Toast.makeText(context, "Map generated (not saved)", Toast.LENGTH_SHORT).show()
-        }
+        FileHelper.generateAndOpenMap(context, testResults.value)
     }
 
     fun sendEmail(context: android.content.Context) {
-        val currentList = testResults.value
-        if (currentList.isEmpty()) {
-            Toast.makeText(context, "No test data to send", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        val mapHtml = FileHelper.generateAmapHtmlContent(context, currentList)
         val csvFile = FileHelper.getCsvFile(context)
         val csvPath = csvFile?.takeIf { it.exists() }?.absolutePath
 
-        if (csvPath == null && mapHtml == null) {
-            Toast.makeText(context, "No files to send", Toast.LENGTH_SHORT).show()
+        if (csvPath == null) {
+            Toast.makeText(context, "No CSV data to send", Toast.LENGTH_SHORT).show()
             return
         }
 
-        FileHelper.sendEmailWithGeneratedMap(context, csvPath, mapHtml)
+        FileHelper.sendEmailCsvOnly(context, csvPath)
     }
 
     fun deleteAllHistory(context: android.content.Context) {

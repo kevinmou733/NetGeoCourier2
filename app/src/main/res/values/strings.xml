@@ -17,6 +17,9 @@
     <string name="delete">Delete</string>
     <string name="cancel">Cancel</string>
 
+    <!-- 数据目录 -->
+    <string name="open_data_folder">Open Data Folder</string>
+
     <!-- 测试结果 -->
     <string name="latest_result">Latest Result</string>
     <string name="no_test_result_yet">No test result yet.</string>
@@ -80,5 +83,4 @@
     <string name="delete_history">Delete History</string>
     <string name="delete_all_history">Delete All History</string>
     <string name="delete_history_confirm">Are you sure you want to delete all history? This action cannot be undone.</string>
-
 </resources>

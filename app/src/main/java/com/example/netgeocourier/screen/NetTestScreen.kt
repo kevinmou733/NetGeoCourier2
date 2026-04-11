@@ -2,6 +2,7 @@
 
 
 import android.graphics.Paint
+import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -175,12 +176,12 @@ fun NetTestScreen(
                         }
 
                         Button(
-                            onClick = { viewModel.saveCsv(context) },
+                            onClick = { viewModel.openDataDirectory(context) },
                             enabled = !isTesting && !isAutoTesting,
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text(stringResource(R.string.save_csv), fontSize = 14.sp)
+                            Text(stringResource(R.string.open_data_folder), fontSize = 14.sp)
                         }
                     }
 

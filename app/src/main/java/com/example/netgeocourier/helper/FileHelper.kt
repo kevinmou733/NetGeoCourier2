@@ -11,9 +11,6 @@ import com.example.netgeocourier.BuildConfig
 import com.example.netgeocourier.data.NetTestResult
 import java.io.File
 import java.io.FileOutputStream
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 object FileHelper {
     private const val TAG = "FileHelper"
@@ -21,9 +18,7 @@ object FileHelper {
 
     fun getDocumentsDir(context: Context): File? {
         val dir = context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)
-        if (dir != null && !dir.exists()) {
-            dir.mkdirs()
-        }
+        if (dir != null && !dir.exists()) dir.mkdirs()
         return dir
     }
 
@@ -32,204 +27,158 @@ object FileHelper {
         return File(dir, CSV_FILE_NAME)
     }
 
-    /**
-     * 追加单条记录到CSV文件
-     * @return 文件路径，如果失败返回null
-     */
     fun appendCsvRecord(context: Context, result: NetTestResult): String? {
         val file = getCsvFile(context) ?: return null
-
         return try {
-            // 如果文件不存在，先写入表头
             if (!file.exists()) {
                 file.writeText("timestamp,longitude_gcj02,latitude_gcj02,upload_mbps,download_mbps,ping_ms\n")
             }
-
-            // 追加单条记录
             FileOutputStream(file, true).bufferedWriter().use { out ->
-                val gcjLat = result.latitude
-                val gcjLon = result.longitude
-                out.write(
-                    "${result.timestamp},$gcjLon,${"%.6f".format(gcjLat)}," +
-                        "${"%.2f".format(result.upload)},${"%.2f".format(result.download)},${result.ping}\n"
-                )
+                out.write("${result.timestamp},${result.longitude},${"%.6f".format(result.latitude)}," +
+                        "${"%.2f".format(result.upload)},${"%.2f".format(result.download)},${result.ping}\n")
             }
-
-            Log.d(TAG, "Appended record to CSV: ${file.name}")
+            Log.d(TAG, "Appended CSV record")
             file.absolutePath
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to append CSV record: ${e.message}", e)
-            Toast.makeText(context, "Save failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            Log.e(TAG, "CSV append failed: ${e.message}", e)
             null
         }
     }
 
-    /**
-     * 追加多条记录到CSV文件（用于手动保存批量新数据）
-     * @return 文件路径，如果失败返回null
-     */
     fun appendCsvRecords(context: Context, results: List<NetTestResult>): String? {
         if (results.isEmpty()) return null
-
         val file = getCsvFile(context) ?: return null
-
         return try {
-            // 如果文件不存在，先写入表头
             if (!file.exists()) {
                 file.writeText("timestamp,longitude_gcj02,latitude_gcj02,upload_mbps,download_mbps,ping_ms\n")
             }
-
-            // 追加所有记录
             FileOutputStream(file, true).bufferedWriter().use { out ->
                 results.forEach {
-                    val gcjLat = it.latitude
-                    val gcjLon = it.longitude
-                    out.write(
-                        "${it.timestamp},$gcjLon,${"%.6f".format(gcjLat)}," +
-                            "${"%.2f".format(it.upload)},${"%.2f".format(it.download)},${it.ping}\n"
-                    )
+                    out.write("${it.timestamp},${it.longitude},${"%.6f".format(it.latitude)}," +
+                            "${"%.2f".format(it.upload)},${"%.2f".format(it.download)},${it.ping}\n")
                 }
             }
-
-            Log.d(TAG, "Appended ${results.size} records to CSV: ${file.name}")
-            Toast.makeText(context, "CSV saved: ${file.name} (+${results.size} records)", Toast.LENGTH_SHORT).show()
+            Log.d(TAG, "Appended ${results.size} CSV records")
+            Toast.makeText(context, "Saved +${results.size} records", Toast.LENGTH_SHORT).show()
             file.absolutePath
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to append CSV records: ${e.message}", e)
-            Toast.makeText(context, "Save failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            Log.e(TAG, "CSV batch save failed: ${e.message}", e)
             null
         }
     }
 
-    /**
-     * 生成高德地图HTML文件并立即删除，不保存到本地
-     * @return HTML内容，如果失败返回null
-     */
+    fun getCsvRecordCount(context: Context): Int {
+        val file = getCsvFile(context) ?: return 0
+        if (!file.exists()) return 0
+        return try { file.readLines().size - 1 } catch (e: Exception) { 0 }
+    }
+
     fun generateAmapHtmlContent(context: Context, list: List<NetTestResult>): String? {
         val key = BuildConfig.AMAP_WEB_KEY
-
         if (key.isBlank()) {
-            Toast.makeText(context, "Please configure AMAP_WEB_KEY in local.properties", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "Configure AMAP_WEB_KEY", Toast.LENGTH_LONG).show()
             return null
         }
-
         if (list.isEmpty()) {
-            Toast.makeText(context, "No data to generate map", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "No data", Toast.LENGTH_SHORT).show()
             return null
         }
-
-        val first = list.firstOrNull()!!
-        val (centerLat, centerLon) = first.latitude to first.longitude
-
+        val first = list.first()
         val markers = list.joinToString("\n") { item ->
-            val (lat, lon) = item.latitude to item.longitude
-            """
-            |new AMap.Marker({
-            |  position: [$lon, $lat],
-            |  map: map,
-            |  title: "${item.timestamp}"
-            |});
-            """.trimMargin()
+            "new AMap.Marker({position: [${item.longitude}, ${item.latitude}], map: map, title: '${item.timestamp}'});"
         }
-
-        val html = """
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <meta charset="utf-8">
-              <title>Network Test Map</title>
-              <style>html,body,#container{width:100%;height:100%;margin:0;padding:0;}</style>
-              <script src="https://webapi.amap.com/maps?v=2.0&key=$key"></script>
-            </head>
-            <body>
-              <div id="container"></div>
-              <script>
-                var map = new AMap.Map('container', {
-                  resizeEnable: true,
-                  zoom: 13,
-                  center: [$centerLon, $centerLat]
-                });
-                $markers
-                // 启用定位蓝点
-                map.setMyLocationEnabled(true);
-                var myLocationStyle = new AMap.MyLocationStyle();
-                myLocationStyle.myLocationType(AMap.MyLocationType.LOCATION_TYPE_LOCATION_ROTATE);
-                myLocationStyle.interval(2000);
-                map.setMyLocationStyle(myLocationStyle);
-              </script>
-            </body>
-            </html>
+        return """
+            <!DOCTYPE html><html><head>
+            <meta charset="utf-8"><title>Map</title>
+            <style>html,body,#container{width:100%;height:100%;margin:0;padding:0;}</style>
+            <script src="https://webapi.amap.com/maps?v=2.0&key=$key"></script>
+            </head><body><div id="container"></div><script>
+            var map = new AMap.Map('container', {resizeEnable:true, zoom:13, center: [${first.longitude}, ${first.latitude}]});
+            $markers
+            map.setMyLocationEnabled(true);
+            </script></body></html>
         """.trimIndent()
-
-        Log.d(TAG, "Generated map HTML content for ${list.size} points")
-        return html
     }
 
-    /**
-     * 生成高德地图HTML文件（为了兼容旧调用，已废弃）
-     * @return null（文件不保存）
-     */
-    @Deprecated("Use generateAmapHtmlContent instead. Map files are not persisted.")
-    fun saveAmapHtml(context: Context, list: List<NetTestResult>): String? {
-        // 不再保存文件到本地
-        Toast.makeText(context, "Map generated (not saved locally)", Toast.LENGTH_SHORT).show()
-        return null
+    fun generateAndOpenMap(context: Context, list: List<NetTestResult>): Boolean {
+        if (list.isEmpty()) {
+            Toast.makeText(context, "No data", Toast.LENGTH_SHORT).show()
+            return false
+        }
+        val html = generateAmapHtmlContent(context, list) ?: return false
+        return try {
+            val tempFile = File.createTempFile("netmap_", ".html", context.cacheDir)
+            tempFile.writeText(html)
+            val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", tempFile)
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "text/html")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(Intent.createChooser(intent, "Open map"))
+            Thread {
+                try { Thread.sleep(3000) } catch (e: InterruptedException) {}
+                tempFile.delete()
+                Log.d(TAG, "Deleted temp map file")
+            }.start()
+            true
+        } catch (e: Exception) {
+            Log.e(TAG, "Open map failed: ${e.message}", e)
+            Toast.makeText(context, "Failed: ${e.message}", Toast.LENGTH_SHORT).show()
+            false
+        }
     }
 
-    /**
-     * 发送邮件（支持动态生成的HTML内容，不依赖本地文件）
-     */
     fun sendEmailWithGeneratedMap(context: Context, csvPath: String?, mapHtmlContent: String?) {
         if (csvPath == null && mapHtmlContent == null) {
-            Toast.makeText(context, "No data to send", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "No files to send", Toast.LENGTH_SHORT).show()
             return
         }
-
         val email = Intent(Intent.ACTION_SEND_MULTIPLE).apply {
             type = "application/octet-stream"
             putExtra(Intent.EXTRA_SUBJECT, "Network Test Data")
         }
-
         val uris = ArrayList<Uri>()
-
-        // 添加CSV文件
         csvPath?.let { path ->
-            val file = File(path)
-            if (file.exists()) {
-                uris.add(
-                    FileProvider.getUriForFile(
-                        context,
-                        "${context.packageName}.fileprovider",
-                        file
-                    )
-                )
+            File(path).takeIf { it.exists() }?.let {
+                uris.add(FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", it))
             }
         }
-
-        // 动态生成HTML临时文件
-        var tempHtmlFile: File? = null
+        var tempFile: File? = null
         if (mapHtmlContent != null) {
             try {
-                val dir = context.cacheDir  // 使用缓存目录，自动清理
-                tempHtmlFile = File.createTempFile("netmap_", ".html", dir)
-                tempHtmlFile.writeText(mapHtmlContent)
-                uris.add(
-                    FileProvider.getUriForFile(
-                        context,
-                        "${context.packageName}.fileprovider",
-                        tempHtmlFile
-                    )
-                )
+                tempFile = File.createTempFile("netmap_", ".html", context.cacheDir)
+                tempFile.writeText(mapHtmlContent)
+                uris.add(FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", tempFile))
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to create temp HTML file: ${e.message}", e)
+                Log.e(TAG, "Temp file error: ${e.message}", e)
             }
         }
-
         email.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
         email.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        context.startActivity(Intent.createChooser(email, "Send network test files"))
+        context.startActivity(Intent.createChooser(email, "Send email"))
+        tempFile?.deleteOnExit()
+    }
 
-        // 发送后删除临时文件（延迟一点，确保邮件客户端已读取）
-        tempHtmlFile?.deleteOnExit()
+    /**
+     * 仅发送CSV文件（不包含地图）
+     */
+    fun sendEmailCsvOnly(context: Context, csvPath: String?) {
+        if (csvPath == null) {
+            Toast.makeText(context, "No CSV file to send", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val file = File(csvPath)
+        if (!file.exists()) {
+            Toast.makeText(context, "CSV file not found", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val email = Intent(Intent.ACTION_SEND).apply {
+            type = "text/csv"
+            putExtra(Intent.EXTRA_SUBJECT, "Network Test CSV Data")
+            putExtra(Intent.EXTRA_STREAM, FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file))
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        context.startActivity(Intent.createChooser(email, "Send CSV"))
     }
 }
