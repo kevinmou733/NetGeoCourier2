@@ -6,6 +6,8 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <!--为了提交加个注释-->
     <application
         android:allowBackup="true"
@@ -20,6 +22,8 @@
         <meta-data
             android:name="com.amap.api.v2.apikey"
             android:value="${AMAP_KEY}" />
+
+        <service android:name="com.amap.api.location.APSService" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

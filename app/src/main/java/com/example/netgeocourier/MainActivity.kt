@@ -10,7 +10,7 @@ import com.example.netgeocourier.helper.LocationHelper
 import com.example.netgeocourier.helper.PermissionHelper
 import com.example.netgeocourier.screen.NetTestScreen
 import com.example.netgeocourier.ui.theme.NetGeoCourierTheme
-import com.google.android.gms.location.LocationServices
+
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
@@ -29,8 +29,7 @@ class MainActivity : ComponentActivity() {
 
         viewmodel = ViewModelProvider(this).get(NetTestViewModel::class.java)
 
-        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        locationHelper = LocationHelper(fusedLocationClient)
+        locationHelper = LocationHelper(this)
 
         setContent {
             NetGeoCourierTheme {
@@ -46,6 +45,7 @@ class MainActivity : ComponentActivity() {
     private fun requestPermissions() {
         PermissionHelper.registerPermissionLauncher(this) {
             // Permission granted
+
         }
     }
 }

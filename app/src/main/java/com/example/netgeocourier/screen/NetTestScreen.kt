@@ -51,7 +51,7 @@ fun NetTestScreen(locationHelper: LocationHelper) {
         isTesting = true
         curResult = null
         coroutineScope.launch {
-            val location = locationHelper.getCurrentLocation(context)
+            val location = locationHelper.getCurrentLocation()
             if (location == null) {
                 Toast.makeText(context, "定位失败", Toast.LENGTH_SHORT).show()
                 isTesting = false
@@ -349,10 +349,10 @@ fun NetTestScreen(locationHelper: LocationHelper) {
 
 @Composable
 fun ResultDetailCard(result: NetTestResult) {
+    // 高德定位返回的坐标已是GCJ02，直接使用，无需转换
     val (gcjLat, gcjLon) = remember(result) {
-        CoordTransform.wgs84ToGcj02(result.latitude, result.longitude)
+        result.latitude to result.longitude
     }
-
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -410,8 +410,9 @@ fun SpeedItem(label: String, value: Float, color: Color, unit: String = "Mbps") 
 
 @Composable
 fun ResultDetailItem(result: NetTestResult, isFirst: Boolean) {
+    // 高德定位返回的坐标已是GCJ02，直接使用，无需转换
     val (gcjLat, gcjLon) = remember(result) {
-        CoordTransform.wgs84ToGcj02(result.latitude, result.longitude)
+        result.latitude to result.longitude
     }
 
     Column {

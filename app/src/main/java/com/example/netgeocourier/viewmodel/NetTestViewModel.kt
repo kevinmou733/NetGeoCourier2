@@ -7,7 +7,7 @@ import com.example.netgeocourier.data.NetTestResult
 import com.example.netgeocourier.helper.LocationHelper
 import com.example.netgeocourier.helper.SpeedTestHelper
 import com.example.netgeocourier.helper.FileHelper
-import com.google.android.gms.location.LocationServices
+
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -22,8 +22,8 @@ import java.util.*
 
 class NetTestViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(application)
-    val locationHelper = LocationHelper(fusedLocationClient)
+    //private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(application)
+    val locationHelper = LocationHelper(application)
 
     private val _isTesting = MutableStateFlow(false)
     val isTesting: StateFlow<Boolean> = _isTesting.asStateFlow()
@@ -56,7 +56,7 @@ class NetTestViewModel(application: Application) : AndroidViewModel(application)
         
         coroutineScope.launch {
             val context = getApplication<Application>()
-            val location = locationHelper.getCurrentLocation(context)
+            val location = locationHelper.getCurrentLocation()
             if (location == null) {
                 _isTesting.value = false
                 onFinish?.invoke()

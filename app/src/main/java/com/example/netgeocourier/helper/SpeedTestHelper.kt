@@ -6,6 +6,7 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
+import java.net.InetAddress
 
 object SpeedTestHelper {
     private const val DOWNLOAD_URL = "https://speed.cloudflare.com/__down?bytes=25000000"
@@ -67,21 +68,17 @@ object SpeedTestHelper {
         }
     }
 
-    fun measurePing(): Int {
-        return try {
-            val process = Runtime.getRuntime().exec("/system/bin/ping -c 1 $PING_HOST")
-            val reader = BufferedReader(InputStreamReader(process.inputStream))
-            val result = reader.readText()
-            reader.close()
-            process.waitFor()
-
-            val timeIndex = result.indexOf("time=")
-            if (timeIndex != -1) {
-                val timeStr = result.substring(timeIndex + 5).split(Regex("[\\sms]"))[0]
-                timeStr.toDoubleOrNull()?.toInt() ?: -1
-            } else -1
-        } catch (e: Exception) {
-            -1
+// 使用 InetAddress 实现 ping 功能（无需 root，更安全）
+        suspend fun measurePing(): Int = withContext(Dispatchers.IO) {
+            try {
+                val address = InetAddress.getByName(PING_HOST)
+                val startTime = System.currentTimeMillis()
+                // 超时 3 秒
+                val isReachable = address.isReachable(3000)
+                val duration = System.currentTimeMillis() - startTime
+                if (isReachable) duration.toInt() else -1
+            } catch (e: Exception) {
+                -1
+            }
         }
-    }
 }

@@ -32,7 +32,8 @@ object FileHelper {
                 out.write("时间,经度(GCJ-02),纬度(GCJ-02),上行(Mbps),下行(Mbps),Ping(ms)\n")
             }
             list.forEach {
-                val (gcjLat, gcjLon) = CoordTransform.wgs84ToGcj02(it.latitude, it.longitude)
+                val gcjLat = it.latitude
+                val gcjLon = it.longitude
                 out.write(
                     "${it.timestamp},$gcjLon,${"%.2f".format(gcjLat)}," +
                     "${"%.2f".format(it.upload)},${"%.2f".format(it.download)},${it.ping}\n"
@@ -56,11 +57,11 @@ object FileHelper {
 
         val first = list.firstOrNull()
         val (centerLat, centerLon) = first?.let {
-            CoordTransform.wgs84ToGcj02(it.latitude, it.longitude)
+            it.latitude to it.longitude  // 已经是 GCJ-02
         } ?: (39.90923 to 116.397428)
 
         val markers = list.joinToString("\n") { item ->
-            val (lat, lon) = CoordTransform.wgs84ToGcj02(item.latitude, item.longitude)
+            val (lat, lon) = item.latitude to item.longitude
             """
             |          new AMap.Marker({
             |            position: [$lon, $lat],
