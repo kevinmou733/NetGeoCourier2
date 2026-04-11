@@ -276,6 +276,30 @@ class NetTestViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    fun openCsvFile(context: android.content.Context) {
+        val csvFile = FileHelper.getCsvFile(context)
+        if (csvFile == null || !csvFile.exists()) {
+            Toast.makeText(context, "No CSV file found", Toast.LENGTH_SHORT).show()
+            return
+        }
+        try {
+            val uri = androidx.core.content.FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                csvFile
+            )
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "text/csv")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to open CSV file: ${e.message}", e)
+            Toast.makeText(context, "Cannot open CSV: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     fun saveAmapHtml(context: android.content.Context) {
         FileHelper.generateAndOpenMap(context, testResults.value)
     }

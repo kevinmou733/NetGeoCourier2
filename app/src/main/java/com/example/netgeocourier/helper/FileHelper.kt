@@ -83,10 +83,10 @@ object FileHelper {
             Toast.makeText(context, "No data", Toast.LENGTH_SHORT).show()
             return null
         }
-        val first = list.first()
-        val markers = list.joinToString("\n") { item ->
-            "new AMap.Marker({position: [${item.longitude}, ${item.latitude}], map: map, title: '${item.timestamp}'});"
-        }
+         val first = list.first()
+         val markers = list.joinToString("\n") { item ->
+             "new AMap.Marker({position: [${item.longitude}, ${item.latitude}], map: map, title: '${item.timestamp}\\n下载: ${item.download} Mbps\\n上传: ${item.upload} Mbps', label: {content: '↓${item.download} ↑${item.upload}', style: {fontSize: '10px', color: '#333', background: 'rgba(255,255,255,0.7)', padding: '2px 4px', borderRadius: '3px'}}});"
+         }
         return """
             <!DOCTYPE html><html><head>
             <meta charset="utf-8"><title>Map</title>

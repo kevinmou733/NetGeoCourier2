@@ -229,7 +229,7 @@ fun NetTestScreen(
                         }
 
                         Button(
-                            onClick = { viewModel.openDataDirectory(context) },
+                            onClick = { viewModel.openCsvFile(context) },
                             enabled = !isTesting && !isAutoTesting,
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
