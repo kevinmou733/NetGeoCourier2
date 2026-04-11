@@ -84,6 +84,7 @@ fun NetTestScreen(
     val currentResult by viewModel.curResult.collectAsState()
     val csvPath by viewModel.csvPath.collectAsState()
     val htmlPath by viewModel.htmlPath.collectAsState()
+    var showDeleteDialog by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
 
@@ -126,35 +127,32 @@ fun NetTestScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Button(
-                            onClick = { viewModel.doTest(
-                                onError = { errorMessage ->
-                                    Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
-                                }
-                            )},
-                            enabled = !isTesting && !isAutoTesting,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text(stringResource(R.string.start_test), fontSize = 14.sp)
-                        }
+                     Row(
+                         modifier = Modifier.fillMaxWidth(),
+                         horizontalArrangement = Arrangement.spacedBy(12.dp)
+                     ) {
+                         Button(
+                             onClick = { viewModel.doTest(
+                                 onError = { errorMessage ->
+                                     Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+                                 }
+                             )},
+                             enabled = !isTesting && !isAutoTesting,
+                             modifier = Modifier.weight(1f),
+                             shape = RoundedCornerShape(12.dp)
+                         ) {
+                             Text(stringResource(R.string.start_test), fontSize = 14.sp)
+                         }
 
-                        Button(
-                            onClick = { viewModel.stopAutoTest() },
-                            enabled = isTesting || isAutoTesting,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.error
-                            )
-                        ) {
-                            Text(stringResource(R.string.stop), fontSize = 14.sp)
-                        }
-                    }
+                         Button(
+                             onClick = { viewModel.saveAmapHtml(context) },
+                             enabled = testResults.isNotEmpty() && !isTesting && !isAutoTesting,
+                             modifier = Modifier.weight(1f),
+                             shape = RoundedCornerShape(12.dp)
+                         ) {
+                             Text(stringResource(R.string.generate_map), fontSize = 14.sp)
+                         }
+                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
@@ -162,15 +160,6 @@ fun NetTestScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Button(
-                            onClick = { viewModel.saveCsv(context) },
-                            enabled = testResults.isNotEmpty() && !isTesting && !isAutoTesting,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text(stringResource(R.string.save_csv), fontSize = 14.sp)
-                        }
-
                         Button(
                             onClick = {
                                 if (isAutoTesting) viewModel.stopAutoTest() else viewModel.startAutoTest()
@@ -184,6 +173,15 @@ fun NetTestScreen(
                                 fontSize = 14.sp
                             )
                         }
+
+                        Button(
+                            onClick = { viewModel.saveCsv(context) },
+                            enabled = !isTesting && !isAutoTesting,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(stringResource(R.string.save_csv), fontSize = 14.sp)
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -193,22 +191,39 @@ fun NetTestScreen(
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Button(
-                            onClick = { viewModel.saveAmapHtml(context) },
-                            enabled = testResults.isNotEmpty() && !isTesting && !isAutoTesting,
+                            onClick = { viewModel.stopAutoTest() },
+                            enabled = isTesting || isAutoTesting,
                             modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.error
+                            )
                         ) {
-                            Text(stringResource(R.string.generate_map), fontSize = 14.sp)
+                            Text(stringResource(R.string.stop), fontSize = 14.sp)
                         }
 
                         Button(
                             onClick = { viewModel.sendEmail(context) },
-                            enabled = testResults.isNotEmpty() && !isTesting && !isAutoTesting,
+                            enabled = !isTesting && !isAutoTesting,
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             Text(stringResource(R.string.send_email), fontSize = 14.sp)
                         }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // 删除历史记录按钮
+                    Button(
+                        onClick = { showDeleteDialog = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Text(stringResource(R.string.delete_history), fontSize = 14.sp)
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -348,11 +363,42 @@ fun NetTestScreen(
                     } else {
                         testResults.reversed().forEachIndexed { index, result ->
                             ResultDetailItem(result = result, isFirst = index == 0)
+                 }
+             }
+         }
+
+         // 删除历史确认对话框
+        if (showDeleteDialog) {
+            AlertDialog(
+                onDismissRequest = { showDeleteDialog = false },
+                title = {
+                    Text(
+                        text = stringResource(R.string.delete_all_history),
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                text = {
+                    Text(stringResource(R.string.delete_history_confirm))
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            viewModel.deleteAllHistory(context)
+                            showDeleteDialog = false
                         }
+                    ) {
+                        Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteDialog = false }) {
+                        Text(stringResource(R.string.cancel))
                     }
                 }
-            }
+            )
         }
+     }
+ }
     }
 }
 
@@ -378,14 +424,14 @@ fun ResultDetailCard(result: NetTestResult) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    SpeedItem(label = stringResource(R.string.download), value = result.download.toFloat(), color = Color(0xFF4285F4))
-                    SpeedItem(label = stringResource(R.string.upload), value = result.upload.toFloat(), color = Color(0xFFEA4335))
-                    SpeedItem(label = stringResource(R.string.ping), value = result.ping.toFloat(), color = Color(0xFF34A853), unit = stringResource(R.string.unit_ms_short))
-                }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                SpeedItem(label = stringResource(R.string.download), value = result.download.toFloat(), color = Color(0xFF4285F4))
+                SpeedItem(label = stringResource(R.string.upload), value = result.upload.toFloat(), color = Color(0xFFEA4335))
+                SpeedItem(label = stringResource(R.string.ping), value = result.ping.toFloat(), color = Color(0xFF34A853), unit = stringResource(R.string.unit_ms_short))
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
 

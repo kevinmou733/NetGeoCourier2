@@ -2,6 +2,7 @@ package com.example.netgeocourier.viewmodel
 
 import android.app.Application
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.netgeocourier.R
@@ -9,7 +10,6 @@ import com.example.netgeocourier.data.NetTestResult
 import com.example.netgeocourier.helper.LocationHelper
 import com.example.netgeocourier.helper.SpeedTestHelper
 import com.example.netgeocourier.helper.FileHelper
-
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -19,6 +19,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -36,8 +37,8 @@ enum class AppPage {
 
 class NetTestViewModel(application: Application) : AndroidViewModel(application) {
     var currentPage by mutableStateOf(AppPage.TEST)
-    //private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(application)
     val locationHelper = LocationHelper(application)
+    private val speedTestHelper = SpeedTestHelper(application)
 
     private val _isTesting = MutableStateFlow(false)
     val isTesting: StateFlow<Boolean> = _isTesting.asStateFlow()
@@ -60,7 +61,41 @@ class NetTestViewModel(application: Application) : AndroidViewModel(application)
     private val _htmlPath = MutableStateFlow<String?>(null)
     val htmlPath: StateFlow<String?> = _htmlPath.asStateFlow()
 
+    // 追踪已保存到CSV的记录数量
+    private var savedRecordCount = 0
+
     private val coroutineScope = CoroutineScope(Dispatchers.Main + viewModelScope.coroutineContext)
+
+    init {
+        // 从CSV加载历史数据
+        try {
+            val context = getApplication<Application>()
+            val csvFile = FileHelper.getCsvFile(context)
+            if (csvFile != null && csvFile.exists()) {
+                val records = csvFile.readLines()
+                    .drop(1)  // 跳过表头
+                    .filter { it.isNotBlank() }
+                    .map { line ->
+                        val parts = line.split(",")
+                        if (parts.size >= 6) {
+                            NetTestResult(
+                                timestamp = parts[0],
+                                longitude = parts[1].toDoubleOrNull() ?: 0.0,
+                                latitude = parts[2].toDoubleOrNull() ?: 0.0,
+                                upload = parts[3].toDoubleOrNull() ?: 0.0,
+                                download = parts[4].toDoubleOrNull() ?: 0.0,
+                                ping = parts[5].toIntOrNull() ?: 0
+                            )
+                        } else null
+                    }.filterNotNull()
+                _testResults.value = records
+                savedRecordCount = records.size
+                Log.d(TAG, "Loaded ${records.size} historical records from CSV, savedRecordCount=$savedRecordCount")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to load CSV history: ${e.message}", e)
+        }
+    }
 
     fun doTest(onFinish: (() -> Unit)? = null, onError: (String) -> Unit = {}) {
         if (_isTesting.value) return
@@ -104,15 +139,15 @@ class NetTestViewModel(application: Application) : AndroidViewModel(application)
                 Log.d(TAG, "Location obtained: ${location.latitude}, ${location.longitude}")
 
                 Log.d(TAG, "Measuring download speed...")
-                val download = SpeedTestHelper.measureDownloadSpeed()
+                val download = speedTestHelper.measureDownloadSpeed()
                 Log.d(TAG, "Download: ${download} Mbps")
 
                 Log.d(TAG, "Measuring upload speed...")
-                val upload = SpeedTestHelper.measureUploadSpeed()
+                val upload = speedTestHelper.measureUploadSpeed()
                 Log.d(TAG, "Upload: ${upload} Mbps")
 
                 Log.d(TAG, "Measuring ping...")
-                val ping = SpeedTestHelper.measurePing()
+                val ping = speedTestHelper.measurePing()
                 Log.d(TAG, "Ping: ${ping} ms")
 
                 val timeStr = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
@@ -127,6 +162,17 @@ class NetTestViewModel(application: Application) : AndroidViewModel(application)
 
                 _curResult.value = result
                 _testResults.value = _testResults.value + result
+
+                // 自动追加到CSV（确保数据不丢失）
+                try {
+                    val context = getApplication<Application>()
+                    FileHelper.appendCsvRecord(context, result)
+                    savedRecordCount = _testResults.value.size  // 同步已保存计数
+                    Log.d(TAG, "Auto-saved record to CSV, savedRecordCount=$savedRecordCount")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to auto-save CSV: ${e.message}", e)
+                }
+
                 Log.d(TAG, "Test result added. Total: ${_testResults.value.size}")
             } catch (e: Exception) {
                 Log.e(TAG, "doTest exception: ${e.message}", e)
@@ -149,7 +195,6 @@ class NetTestViewModel(application: Application) : AndroidViewModel(application)
                 count++
                 Log.d(TAG, "Auto test iteration $count")
                 val deferred = CompletableDeferred<Unit>()
-                // 确保 onFinish 不会抛出异常
                 doTest(
                     onFinish = {
                         Log.d(TAG, "doTest onFinish called")
@@ -162,7 +207,7 @@ class NetTestViewModel(application: Application) : AndroidViewModel(application)
                     onError = { err ->
                         Log.e(TAG, "doTest error: $err")
                         try {
-                            deferred.complete(Unit) // 即使错误也继续
+                            deferred.complete(Unit)
                         } catch (e: Exception) {
                             Log.e(TAG, "deferred complete failed: ${e.message}", e)
                         }
@@ -196,20 +241,77 @@ class NetTestViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun saveCsv(context: android.content.Context) {
-        _csvPath.value = FileHelper.saveCsv(context, _testResults.value)
+        val currentList = testResults.value
+        if (currentList.isEmpty()) {
+            Toast.makeText(context, "No data to save", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // 检查是否有未保存的新数据
+        val hasNewData = savedRecordCount < currentList.size
+        if (hasNewData) {
+            val newRecords = currentList.subList(savedRecordCount, currentList.size)
+            val path = FileHelper.appendCsvRecords(context, newRecords)
+            if (path != null) {
+                savedRecordCount = currentList.size
+                _csvPath.value = path
+                Toast.makeText(context, "Saved ${newRecords.size} record(s)", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            Toast.makeText(context, "All data already saved", Toast.LENGTH_SHORT).show()
+        }
     }
 
     fun saveAmapHtml(context: android.content.Context) {
-        _htmlPath.value = FileHelper.saveAmapHtml(context, _testResults.value)
+        // 仅生成并显示地图，不保存文件
+        val htmlContent = FileHelper.generateAmapHtmlContent(context, testResults.value)
+        if (htmlContent != null) {
+            Toast.makeText(context, "Map generated (not saved)", Toast.LENGTH_SHORT).show()
+        }
     }
 
     fun sendEmail(context: android.content.Context) {
-        FileHelper.sendEmail(context, _csvPath.value, _htmlPath.value)
+        val currentList = testResults.value
+        if (currentList.isEmpty()) {
+            Toast.makeText(context, "No test data to send", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val mapHtml = FileHelper.generateAmapHtmlContent(context, currentList)
+        val csvFile = FileHelper.getCsvFile(context)
+        val csvPath = csvFile?.takeIf { it.exists() }?.absolutePath
+
+        if (csvPath == null && mapHtml == null) {
+            Toast.makeText(context, "No files to send", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        FileHelper.sendEmailWithGeneratedMap(context, csvPath, mapHtml)
+    }
+
+    fun deleteAllHistory(context: android.content.Context) {
+        try {
+            val csvFile = FileHelper.getCsvFile(context)
+            if (csvFile != null && csvFile.exists()) {
+                csvFile.delete()
+                Toast.makeText(context, "All history deleted", Toast.LENGTH_SHORT).show()
+            }
+
+            _testResults.value = emptyList()
+            _curResult.value = null
+            savedRecordCount = 0
+            _csvPath.value = null
+            _htmlPath.value = null
+
+            Log.d(TAG, "All history deleted")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to delete history: ${e.message}", e)
+            Toast.makeText(context, "Delete failed: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onCleared() {
         super.onCleared()
         stopAutoTest()
-        //coroutineScope.cancel()
     }
 }

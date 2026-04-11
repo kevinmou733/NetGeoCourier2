@@ -14,6 +14,8 @@
     <string name="back">Back</string>
     <string name="refresh">Refresh</string>
     <string name="close">Close</string>
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
 
     <!-- 测试结果 -->
     <string name="latest_result">Latest Result</string>
@@ -73,4 +75,10 @@
 
     <!-- 空值占位符 -->
     <string name="na">--</string>
+
+    <!-- 删除历史 -->
+    <string name="delete_history">Delete History</string>
+    <string name="delete_all_history">Delete All History</string>
+    <string name="delete_history_confirm">Are you sure you want to delete all history? This action cannot be undone.</string>
+
 </resources>
