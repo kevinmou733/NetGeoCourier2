@@ -14,6 +14,7 @@ import com.example.netgeocourier.helper.LocationHelper
 import com.example.netgeocourier.helper.PermissionHelper
 import com.example.netgeocourier.screen.AuthScreen
 import com.example.netgeocourier.screen.EvaluationScreen
+import com.example.netgeocourier.screen.HistoryScreen
 import com.example.netgeocourier.screen.NetTestScreen
 import com.example.netgeocourier.ui.theme.NetGeoCourierTheme
 import com.example.netgeocourier.viewmodel.NetTestViewModel

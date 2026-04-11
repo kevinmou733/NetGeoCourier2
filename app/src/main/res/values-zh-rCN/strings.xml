@@ -17,8 +17,13 @@
     <string name="delete">删除</string>
     <string name="cancel">取消</string>
 
+    <!-- 删除历史 -->
+    <string name="delete_history">删除历史</string>
+    <string name="delete_all_history">删除所有历史</string>
+    <string name="delete_history_confirm">确定要删除所有历史记录吗？此操作不可撤销。</string>
+
     <!-- 数据目录 -->
-    <string name="open_data_folder">打开数据目录</string>
+    <string name="open_local_data">打开本地数据</string>
 
     <string name="latest_result">最新结果</string>
     <string name="no_test_result_yet">暂无测速结果</string>

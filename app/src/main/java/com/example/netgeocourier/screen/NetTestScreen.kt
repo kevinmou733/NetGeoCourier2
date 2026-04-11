@@ -234,7 +234,7 @@ fun NetTestScreen(
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text(stringResource(R.string.open_data_folder), fontSize = 14.sp)
+                            Text(stringResource(R.string.open_local_data), fontSize = 14.sp)
                         }
                     }
 

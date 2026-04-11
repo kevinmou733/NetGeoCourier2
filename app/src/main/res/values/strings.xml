@@ -10,9 +10,14 @@
     <string name="generate_map">生成地图</string>
     <string name="send_email">发送邮件</string>
     <string name="open_network_evaluation">打开网络评估</string>
+    <string name="open_data_folder">打开数据文件夹</string>
+    <string name="open_csv">打开 CSV</string>
+    <string name="open_local_data">打开本地数据</string>
     <string name="back">返回</string>
     <string name="refresh">刷新</string>
     <string name="close">关闭</string>
+    <string name="delete">删除</string>
+    <string name="cancel">取消</string>
 
 
     <string name="latest_result">最新结果</string>
@@ -70,8 +75,10 @@
     <string name="speed_label">%1$s：%2$.2f %3$s</string>
     <string name="na">--</string>
 
-
-    <string name="auth_title">账号中心</string>
+    <!-- 删除历史 -->
+    <string name="delete_history">删除历史</string>
+    <string name="delete_all_history">删除所有历史</string>
+    <string name="delete_history_confirm">确定要删除所有历史记录吗？此操作不可撤销。</string>    <string name="auth_title">账号中心</string>
     <string name="auth_subtitle">现在支持直接在应用内注册、登录并自动保存令牌。</string>
     <string name="auth_tab_login">登录</string>
     <string name="auth_tab_register">注册</string>
