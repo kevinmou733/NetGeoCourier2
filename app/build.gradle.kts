@@ -116,7 +116,7 @@ if (localFile.exists()) {
 
 val amapWebKey = localProperties.getProperty("AMAP_WEB_KEY", "")
 val amapAndroidKey = localProperties.getProperty("AMAP_ANDROID_KEY", "")
-val apiBaseUrl = localProperties.getProperty("API_BASE_URL", "http://10.0.2.2:3000/")
+val apiBaseUrl = localProperties.getProperty("API_BASE_URL", "https://www-speedtest-i.hcb8c115c.nyat.app:11152/")
 
 android {
     namespace = "com.example.netgeocourier"

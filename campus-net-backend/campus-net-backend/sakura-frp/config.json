@@ -1,0 +1,16 @@
+{
+  "token": "请从樱花控制台复制你的授权密钥",
+  "log_level": "info",
+  "log_file": "logs/frpc.log",
+  "tunnels": {
+    "campus-backend": {
+      "type": "http",
+      "local_port": 3000,
+      "remote_port": 3000,
+      "domain": "www-speedtest-i.hcb8c115c.nyat.app",
+      "use_encryption": true,
+      "use_compression": true,
+      "remark": "校园网后端-校赛"
+    }
+  }
+}
