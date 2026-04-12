@@ -44,7 +44,7 @@ class RecordRepository(
     }
 
     private suspend fun uploadSingle(result: NetTestResult): Int {
-        val response = apiService.uploadRecord(result.toUploadRequest())
+        val response = apiService.uploadRecord(convertToUploadRequest(result))
         val body = requireSuccessfulResponse(response)
         if (body.data?.record == null) {
             throw IOException("Server returned an empty record sync result.")
@@ -54,7 +54,7 @@ class RecordRepository(
 
     private suspend fun uploadBatch(results: List<NetTestResult>): Int {
         val response = apiService.uploadBatch(
-            RecordBatchUploadRequest(records = results.map { it.toUploadRequest() })
+            RecordBatchUploadRequest(records = results.map { convertToUploadRequest(it) })
         )
         val body = requireSuccessfulResponse(response)
         return body.data?.count ?: results.size
@@ -72,17 +72,17 @@ class RecordRepository(
         return body
     }
 
-    private fun NetTestResult.toUploadRequest(): RecordUploadRequest {
+    private fun convertToUploadRequest(result: NetTestResult): RecordUploadRequest {
         return RecordUploadRequest(
-            capturedAt = timestamp,
+            capturedAt = result.timestamp,
             metrics = RecordMetrics(
-                downloadMbps = download,
-                uploadMbps = upload,
-                pingMs = ping
+                downloadMbps = result.download,
+                uploadMbps = result.upload,
+                pingMs = result.ping
             ),
             location = RecordLocation(
-                latitude = latitude,
-                longitude = longitude
+                latitude = result.latitude,
+                longitude = result.longitude
             ),
             remark = "Synced automatically from the Android app."
         )
