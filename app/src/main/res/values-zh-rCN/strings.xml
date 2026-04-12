@@ -111,7 +111,7 @@
     <string name="auth_failed">认证失败，请稍后重试。</string>
     <string name="auth_server_title">后端地址</string>
     <string name="auth_server_label">服务器地址</string>
-    <string name="auth_server_hint">服务器地址：www-speedtest-i.hcb8c115c.nyat.app:11152</string>
+    <string name="auth_server_hint">服务器地址https://www-speedtest-i.hcb8c115c.nyat.app:11152/</string>
 
     <string name="session_title">账号状态</string>
     <string name="session_signed_in_title">当前账号</string>

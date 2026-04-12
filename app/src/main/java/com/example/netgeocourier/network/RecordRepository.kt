@@ -54,7 +54,7 @@ class RecordRepository(
 
     private suspend fun uploadBatch(results: List<NetTestResult>): Int {
         val response = apiService.uploadBatch(
-            RecordBatchUploadRequest(records = results.map(NetTestResult::toUploadRequest))
+            RecordBatchUploadRequest(records = results.map { it.toUploadRequest() })
         )
         val body = requireSuccessfulResponse(response)
         return body.data?.count ?: results.size
