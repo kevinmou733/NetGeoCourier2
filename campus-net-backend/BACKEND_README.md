@@ -588,7 +588,7 @@ pm2 stop netgeo-backend
 2. 点击 "高级设置"
 3. 选择 "入站规则" → "新建规则"
 4. 选择 "端口" → TCP → 特定端口：`3000`
-5. 允许连接 → 命名：`NetGeo Courier Backend`
+5. 允许连接 → 命名：`NetGeoCourier Backend`
 
 ---
 
@@ -615,11 +615,8 @@ sudo npm install -g pm2
 #### 2. 上传项目到服务器
 
 ```bash
-# 使用 scp 或 git clone
-scp -r D:\NetGeoCourier2\campus-net-backend user@your-server:/home/netgeo/
-
-# 或
-git clone https://github.com/your-repo/NetGeoCourier2.git
+# 使用git
+git clone https://github.com/kevinmou733/NetGeoCourier2.git
 cd NetGeoCourier2/campus-net-backend/campus-net-backend
 ```
 
@@ -712,7 +709,7 @@ sudo certbot --nginx -d api.your-domain.com
 
 3. **准备后端服务**
    - 确保后端在本地 `127.0.0.1:3000` 正常运行
-   - 测试：`curl http://127.0.0.1:3000/api/v1/health/`
+   - 测试：`curl.exe http://127.0.0.1:3000/api/v1/health/`
 
 ---
 
@@ -822,7 +819,7 @@ API_BASE_URL=http://www-speedtest-i.hcb8c115c.nyat.app:11152/
 
 **说明**：
 - 域名：`www-speedtest-i.hcb8c115c.nyat.app`（从樱花 FRP 控制台获取）
-- 端口：`11152`（你申请的远程端口）
+- 端口：`11152`（申请的远程端口）
 - 协议：**必须用 HTTP**，因为 TCP 隧道不处理 HTTPS 握手
 
 ---
@@ -1069,7 +1066,7 @@ pm2 restart netgeo-backend
 ## 📞 技术支持
 
 - **项目主页**: https://github.com/kevinmou733/NetGeoCourier2
-- **问题反馈**: https://github.com/your-repo/NetGeoCourier2/issues
+- **问题反馈**: https://github.com/kevinmou733/NetGeoCourier2/issues
 - **FRP**: https://www.natfrp.com/
 - **邮箱**: 2398094726@qq.com
 
@@ -1082,4 +1079,4 @@ MIT License - 详见 LICENSE 文件
 ---
 
 **最后更新**: 2026-04-12
-**维护者**: @kevinmou
+**维护者**: @kevinmou733
