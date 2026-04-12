@@ -40,6 +40,7 @@ import com.example.netgeocourier.data.EvaluationData
 import com.example.netgeocourier.helper.AuthTokenStore
 import com.example.netgeocourier.network.ApiClient
 import com.example.netgeocourier.network.EvaluationRepository
+import com.example.netgeocourier.viewmodel.NetTestViewModel
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -52,6 +53,7 @@ private data class EvaluationUiState(
 
 @Composable
 fun EvaluationScreen(
+    viewModel: NetTestViewModel,
     onBack: () -> Unit,
     onOpenAuth: () -> Unit,
     onLogout: () -> Unit
@@ -78,6 +80,15 @@ fun EvaluationScreen(
             }
 
             uiState = EvaluationUiState(isLoading = true)
+            val syncResult = viewModel.syncAllLocalRecords()
+            if (syncResult.isFailure) {
+                val throwable = syncResult.exceptionOrNull()
+                uiState = EvaluationUiState(
+                    errorMessage = throwable?.message ?: context.getString(R.string.request_failed)
+                )
+                return@launch
+            }
+
             repository.getEvaluation()
                 .onSuccess { result ->
                     uiState = EvaluationUiState(data = result)
