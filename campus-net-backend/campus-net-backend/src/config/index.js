@@ -26,7 +26,7 @@ const config = {
   projectRoot,
   envFile,
   nodeEnv: process.env.NODE_ENV || "development",
-  host: process.env.HOST || "10.15.200.158",
+  host: process.env.HOST || "0.0.0.0",
   port: parsePort(process.env.PORT, 3000),
   jwtSecret: process.env.JWT_SECRET || "change-me-local-dev-secret",
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
