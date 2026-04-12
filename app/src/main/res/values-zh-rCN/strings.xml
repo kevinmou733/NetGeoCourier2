@@ -111,7 +111,7 @@
     <string name="auth_failed">认证失败，请稍后重试。</string>
     <string name="auth_server_title">后端地址</string>
     <string name="auth_server_label">服务器地址</string>
-    <string name="auth_server_hint">模拟器使用 http://10.0.2.2:3000/；真机请填写电脑局域网地址，例如 http://192.168.1.10:3000/</string>
+    <string name="auth_server_hint">服务器地址：www-speedtest-i.hcb8c115c.nyat.app:11152</string>
 
     <string name="session_title">账号状态</string>
     <string name="session_signed_in_title">当前账号</string>

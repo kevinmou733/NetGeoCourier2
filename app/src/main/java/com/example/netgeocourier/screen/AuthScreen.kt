@@ -38,6 +38,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.netgeocourier.R
 import com.example.netgeocourier.helper.ApiConfigStore
 import com.example.netgeocourier.helper.AuthTokenStore
@@ -150,7 +151,12 @@ fun AuthScreen(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     label = { Text(stringResource(R.string.auth_server_label)) },
-                    supportingText = { Text(stringResource(R.string.auth_server_hint)) }
+                    supportingText = {
+                        Text(
+                            text = stringResource(R.string.auth_server_hint),
+                            fontSize = 12.sp
+                        )
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
