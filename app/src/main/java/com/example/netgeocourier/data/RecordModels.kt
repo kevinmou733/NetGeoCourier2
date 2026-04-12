@@ -7,6 +7,10 @@ data class RecordUploadRequest(
     val remark: String = ""
 )
 
+data class RecordBatchUploadRequest(
+    val records: List<RecordUploadRequest>
+)
+
 data class RecordMetrics(
     val downloadMbps: Double,
     val uploadMbps: Double,
@@ -21,6 +25,10 @@ data class RecordLocation(
 
 data class RecordUploadData(
     val record: UploadedRecord? = null
+)
+
+data class RecordBatchUploadData(
+    val count: Int = 0
 )
 
 data class UploadedRecord(

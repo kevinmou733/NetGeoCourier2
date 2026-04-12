@@ -26,6 +26,8 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -33,7 +35,6 @@ import java.util.*
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
 
 private const val TAG = "NetTestViewModel"
 
@@ -75,6 +76,7 @@ class NetTestViewModel(application: Application) : AndroidViewModel(application)
     private val recordRepository = RecordRepository(
         ApiClient.recordService(application.applicationContext)
     )
+    private val recordSyncMutex = Mutex()
 
     init {
         // 从CSV加载历史数据
@@ -334,6 +336,27 @@ class NetTestViewModel(application: Application) : AndroidViewModel(application)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to delete history: ${e.message}", e)
             Toast.makeText(context, "Delete failed: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun syncAllLocalRecordsInBackground() {
+        coroutineScope.launch {
+            syncAllLocalRecords()
+                .onFailure { throwable ->
+                    Log.w(TAG, "Failed to sync local history: ${throwable.message}", throwable)
+                }
+        }
+    }
+
+    suspend fun syncAllLocalRecords(): Result<Int> {
+        val context = getApplication<Application>()
+        if (AuthTokenStore.getAccessToken(context).isNullOrBlank()) {
+            return Result.success(0)
+        }
+
+        return recordSyncMutex.withLock {
+            val snapshot = _testResults.value
+            recordRepository.syncResults(snapshot)
         }
     }
 

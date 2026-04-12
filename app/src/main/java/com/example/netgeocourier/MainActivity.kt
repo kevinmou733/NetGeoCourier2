@@ -39,7 +39,10 @@ class MainActivity : ComponentActivity() {
                     when (viewmodel.currentPage) {
                         AppPage.AUTH -> AuthScreen(
                             onBack = { viewmodel.currentPage = AppPage.TEST },
-                            onAuthSuccess = { viewmodel.currentPage = AppPage.TEST }
+                            onAuthSuccess = {
+                                viewmodel.syncAllLocalRecordsInBackground()
+                                viewmodel.currentPage = AppPage.TEST
+                            }
                         )
                         AppPage.TEST -> NetTestScreen(
                             viewModel = viewmodel,
@@ -51,6 +54,7 @@ class MainActivity : ComponentActivity() {
                             }
                         )
                         AppPage.EVALUATION -> EvaluationScreen(
+                            viewModel = viewmodel,
                             onBack = { viewmodel.currentPage = AppPage.TEST },
                             onOpenAuth = { viewmodel.currentPage = AppPage.AUTH },
                             onLogout = {
